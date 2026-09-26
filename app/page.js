@@ -62,7 +62,7 @@ export default function Home(){
    const u=dash.user||dash.profile||safelyUser(token);
  }catch(e){setApiError(e.message);if(/SESSION_INVALID|UNAUTHORIZED|AUTH/i.test(e.message)){clearSession();setLogin(false);setSession(null)}}};
  const safelyUser=()=>null;
- const submit=async e=>{e.preventDefault();setErr("");if(!user.trim()||!/^\\d{6,}$/.test(pin)){setErr("Username wajib diisi dan PIN minimal 6 digit.");return}
+ const submit=async e=>{e.preventDefault();setErr("");if(!user.trim()||!/^\d{6,}$/.test(pin)){setErr("Username wajib diisi dan PIN minimal 6 digit.");return}
    setLoading(true);try{const data=await api("login",{username:user.trim(),pin});const s={token:data.token,username:data.user?.username||user.trim(),role:data.user?.role||"",user:data.user||null};saveSession(s);setSession(s);setLogin(true);setRole(s.role);setProfile(s.user);setPin("");await loadData(s.token)}catch(e){setErr(e.message)}finally{setLoading(false)}
  };
  const logout=()=>{clearSession();setSession(null);setLogin(false);setRole("");setProfile(null);setStudentsData([]);setAssignments([]);setUser("");setPin("")};
