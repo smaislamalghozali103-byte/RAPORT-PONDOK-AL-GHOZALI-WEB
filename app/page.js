@@ -81,7 +81,7 @@ function normalizeClass(k){
 }
 function normalizeCurriculum(c){
   if(Array.isArray(c)) return {curriculumId:c[0]||"",group:c[1]||"",urut:c[2]||"",mataPelajaran:c[3]||"",namaArab:c[4]||"",mapelId:c[5]||""};
-  return {curriculumId:pick(c,"curriculumId","KURIKULUM_ID","id"),group:pick(c,"kelompokKelasSumber","KELOMPOK_KELAS_SUMBER","group","GROUP"),urut:pick(c,"urut","URUT"),mataPelajaran:pick(c,"mataPelajaran","MATA_PELAJARAN"),namaArab:pick(c,"namaArabRaport","NAMA_ARAB_RAPORT","namaArab","NAMA_ARAB"),mapelId:pick(c,"mapelId","MAPEL_ID")};
+  return {curriculumId:pick(c,"curriculumId","KURIKULUM_ID","id"),group:pick(c,"kelompokKelas","KELOMPOK KELAS SUMBER","kelompokKelasSumber","KELOMPOK_KELAS_SUMBER","group","GROUP"),urut:pick(c,"urut","URUT"),mataPelajaran:pick(c,"mataPelajaran","MATA_PELAJARAN"),namaArab:pick(c,"namaArabRaport","NAMA_ARAB_RAPORT","namaArab","NAMA_ARAB"),mapelId:pick(c,"mapelId","MAPEL_ID")};
 }
 function mukimGroupForClass(value){
   const x=String(value||"").toUpperCase().replace(/^KELAS\s*/,"").replace(/INTENSIF/g,"INT").replace(/[^A-Z0-9]/g,"");
