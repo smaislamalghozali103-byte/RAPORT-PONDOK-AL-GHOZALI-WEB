@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap');
 :root{--g:#056b43;--g2:#087c50;--gold:#d7a32a;--ink:#17221c;--muted:#76837c;--line:#e2e9e4;--bg:#f3f7f4}*{box-sizing:border-box}html,body{margin:0;padding:0}body{font-family:Inter,Arial,sans-serif;color:var(--ink);background:var(--bg)}button,input,select{font:inherit}.ico{width:18px;height:18px;flex:none}
 .login-page{min-height:100vh;display:grid;place-items:center;position:relative;overflow:hidden;padding:30px;background:radial-gradient(circle at 15% 10%,#dff3e9,#f7faf8 42%,#edf3ef)}.login-page:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(5,107,67,.035) 25%,transparent 25%,transparent 50%,rgba(5,107,67,.035) 50%,rgba(5,107,67,.035) 75%,transparent 75%);background-size:44px 44px}.orb{position:absolute;border-radius:50%;filter:blur(2px);opacity:.6}.orb.a{width:380px;height:380px;background:#cbe9d8;left:-160px;top:-160px}.orb.b{width:320px;height:320px;background:#f5e6b7;right:-140px;bottom:-120px}.login-card{position:relative;z-index:2;width:min(960px,100%);min-height:570px;display:grid;grid-template-columns:1fr 1fr;background:rgba(255,255,255,.95);border:1px solid #dce7df;border-radius:28px;overflow:hidden;box-shadow:0 35px 90px rgba(3,63,40,.14)}.login-brand{padding:56px 60px;background:linear-gradient(145deg,#fbfffc,#edf7f1)}.login-brand img{width:105px;height:105px;object-fit:contain;margin-bottom:20px}.eyebrow{display:block;color:var(--g);font-size:10px;letter-spacing:.18em;font-weight:800}.login-brand h1{font-size:38px;line-height:1.08;letter-spacing:-.05em;margin:10px 0 18px}.login-brand h1 b{color:var(--g)}.login-brand p{color:#68756e;font-size:12px;line-height:1.8;max-width:430px}.feature-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:25px}.feature-row span{font-size:9px;font-weight:700;color:#557067;background:#fff;border:1px solid #dce8e0;padding:8px 10px;border-radius:99px}.login-form{padding:56px 60px;display:flex;flex-direction:column;justify-content:center}.login-form h2{font-size:25px;margin:0}.login-form p{color:var(--muted);font-size:11px;margin:7px 0 28px}.login-form label{font-size:11px;font-weight:800;margin-bottom:15px}.login-form input{display:block;width:100%;margin-top:7px;padding:13px;border:1px solid #d8e2dc;border-radius:11px;background:#fbfdfc;outline:0}.login-form input:focus{border-color:#77b696;box-shadow:0 0 0 4px rgba(5,107,67,.08)}.primary{border:0;background:linear-gradient(135deg,var(--g),#075a3b);color:#fff;border-radius:11px;padding:13px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:0 10px 22px rgba(5,107,67,.18)}.demo{border:1px solid #dce6e0;background:#fff;color:var(--g);border-radius:11px;padding:12px;font-size:11px;font-weight:800;margin-top:9px;cursor:pointer}.login-form>small{color:#a0aaa5;text-align:center;font-size:9px;margin-top:20px}.error{font-size:10px;color:#a43f33;background:#fff0ed;border:1px solid #f0d0c9;padding:9px;border-radius:9px;margin:-3px 0 10px}.login-page footer{position:absolute;bottom:16px;z-index:2;color:#81908a;font-size:9px}
 .shell{min-height:100vh}.topbar{height:70px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 27px;position:sticky;top:0;z-index:10}.brand{display:flex;align-items:center;gap:11px}.brand img{width:42px;height:42px;object-fit:contain}.brand b{display:block;font-size:12px}.brand span{display:block;color:#7e8983;font-size:9px;margin-top:3px}.account{display:flex;align-items:center;gap:9px}.avatar{width:34px;height:34px;border-radius:10px;background:#e5f3eb;color:var(--g);display:grid;place-items:center;font-size:10px;font-weight:900}.account b{display:block;font-size:10px}.account span{display:block;color:#909a95;font-size:8px;margin-top:2px}.account button{border:1px solid var(--line);background:#fff;color:#65726b;border-radius:9px;padding:8px 10px;font-size:9px;font-weight:700;margin-left:8px;cursor:pointer}.layout{display:grid;grid-template-columns:225px 1fr;min-height:calc(100vh - 70px)}.sidebar{background:#fff;border-right:1px solid var(--line);padding:24px 13px;display:flex;flex-direction:column}.menu-title{font-size:8px;letter-spacing:.16em;color:#9ca7a1;font-weight:800;padding:0 11px 10px}.nav{border:0;background:transparent;color:#68766e;width:100%;display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:10px;font-size:10px;font-weight:650;text-align:left;cursor:pointer;margin-bottom:4px}.nav:hover,.nav.active{background:#e8f5ee;color:var(--g)}.mt{margin-top:22px}.safe{margin-top:auto;background:#f6faf7;border:1px solid #e0ebe4;border-radius:11px;padding:10px;color:#718079}.safe b{display:block;color:#178b5d;font-size:9px}.safe span{display:block;font-size:8px;line-height:1.5;margin-top:3px}.ver{font-size:7px;text-align:center;color:#a1aaa6;margin-top:12px}
@@ -75,7 +76,6 @@
 }
 
 /* ===== TABLE & ARABIC TYPOGRAPHY V4 ===== */
-@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap');
 
 .report,
 .report table{
@@ -173,4 +173,64 @@
  .report-table tbody td{height:27px;padding:3.5px 5px}
  .report-table th:nth-child(2),.report-table td:nth-child(2){font-size:10px}
  .report-table th:nth-child(3),.report-table td:nth-child(3){font-size:8.5px}
+}
+
+
+/* ===== REPORT ORNAMENT + ARABIC NUMBERING V5 ===== */
+.report{
+  position:relative;
+  border:0 !important;
+  outline:0 !important;
+  background-color:#fff;
+  background-image:url("/RAPORT-PONDOK-AL-GHOZALI-WEB/ornamen-raport.webp");
+  background-size:100% 100%;
+  background-repeat:no-repeat;
+  padding:34px 38px 30px;
+  overflow:hidden;
+}
+.report-table{
+  direction:rtl;
+  unicode-bidi:plaintext;
+}
+.report-table th:first-child,
+.report-table td:first-child{
+  width:7%;
+  text-align:center;
+}
+.report-table th:nth-child(2),
+.report-table td:nth-child(2){
+  width:29%;
+  direction:rtl;
+  text-align:right;
+}
+.report-table th:nth-child(3),
+.report-table td:nth-child(3){
+  width:32%;
+  direction:ltr;
+  text-align:left;
+}
+.report-table th:nth-child(4),
+.report-table td:nth-child(4),
+.report-table th:nth-child(5),
+.report-table td:nth-child(5){
+  text-align:center;
+}
+.report-table .arabic-no{
+  direction:rtl;
+  font-family:"Noto Naskh Arabic","Amiri",serif;
+  font-size:12px;
+  font-weight:700;
+}
+.report-table .sum td{
+  text-align:center;
+}
+@media print{
+  .report{
+    border:0 !important;
+    outline:0 !important;
+    background-image:url("/RAPORT-PONDOK-AL-GHOZALI-WEB/ornamen-raport.webp");
+    background-size:100% 100%;
+    padding:25mm 18mm 18mm;
+  }
+  .report-table .arabic-no{font-size:10px}
 }
