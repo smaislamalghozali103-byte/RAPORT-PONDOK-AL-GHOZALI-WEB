@@ -84,7 +84,7 @@ function normalizeCurriculum(c){
   return {curriculumId:pick(c,"curriculumId","KURIKULUM_ID","id"),group:pick(c,"kelompokKelasSumber","KELOMPOK_KELAS_SUMBER","group","GROUP"),urut:pick(c,"urut","URUT"),mataPelajaran:pick(c,"mataPelajaran","MATA_PELAJARAN"),namaArab:pick(c,"namaArabRaport","NAMA_ARAB_RAPORT","namaArab","NAMA_ARAB"),mapelId:pick(c,"mapelId","MAPEL_ID")};
 }
 function mukimGroupForClass(value){
-  const x=String(value||"").toUpperCase().replace(/[‐‑–—]/g,"-").replace(/\s+/g,"").replace(/_/g,"").replace(/INTENSIF/g,"INT");
+  const x=String(value||"").toUpperCase().replace(/^KELAS\s*/,"").replace(/INTENSIF/g,"INT").replace(/[^A-Z0-9]/g,"");
   // TMMIA = seluruh kelas MUKIM: kelas 1–6, baik yang formalnya SMP maupun SMA.
   if(/^1[ABCDE]$/.test(x)) return "KELAS 1(VII SMP)";
   if(/^2[ABCDEF]$/.test(x)) return "KELAS 2 (VIII SMP)";
