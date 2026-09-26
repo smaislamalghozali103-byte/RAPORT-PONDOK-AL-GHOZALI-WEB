@@ -172,6 +172,25 @@ export default function Home(){
  },[subjectCatalog,unit,klass,curriculumData]);
 
  useEffect(()=>{
+   if(unit!=="TMMIA" || !klass || !session?.token) return;
+   const group=mukimGroupForClass(klass);
+   if(!group) return;
+   let cancelled=false;
+   (async()=>{
+     try{
+       const data=await api("curriculum",{kelompok:group},session.token);
+       const rows=arrayFromResponse(data,"data","curriculum","rows");
+       if(!cancelled){
+         setCurriculumData(rows.map(normalizeCurriculum).filter(x=>x.mataPelajaran||x.mapelId));
+       }
+     }catch(e){
+       if(!cancelled) setApiError("KURIKULUM TMMIA belum terhubung: "+e.message);
+     }
+   })();
+   return ()=>{cancelled=true};
+ },[unit,klass,session?.token]);
+
+ useEffect(()=>{
    if(unit && !classes.includes(klass)) setKlass(classes[0]||"");
  },[unit,classes.join("|")]);
 
