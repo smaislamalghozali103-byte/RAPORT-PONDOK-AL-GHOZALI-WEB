@@ -7,7 +7,7 @@ const API_URL="https://script.google.com/macros/s/AKfycbxwA8gv9T0m7hV3kR57kygGnr
 async function api(action, params={}, token="", method="GET"){
   if(method==="POST"){
     const body={action,...params};
-    if(token) body.token=token;
+    if(token){ body.token=token; body.sessionToken=token; }
     const res=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),cache:"no-store"});
     const data=await res.json();
     if(!data.ok) throw new Error(data.message||data.error||"Permintaan API gagal.");
