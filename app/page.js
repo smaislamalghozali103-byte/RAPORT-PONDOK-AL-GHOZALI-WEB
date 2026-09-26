@@ -4,7 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 
 const API_URL="https://script.google.com/macros/s/AKfycbxwA8gv9T0m7hV3kR57kygGnrU8OLPsmu-tFPVASgB_GxUSNqlyIs8XzgMOyIPeG00D/exec";
 
-async function api(action, params={}, token=""){
+async function api(action, params={}, token="", method="GET"){
+  if(method==="POST"){
+    const body={action,...params};
+    if(token) body.token=token;
+    const res=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),cache:"no-store"});
+    const data=await res.json();
+    if(!data.ok) throw new Error(data.message||data.error||"Permintaan API gagal.");
+    return data;
+  }
   const q=new URLSearchParams({action,...params});
   if(token) q.set("token",token);
   const res=await fetch(`${API_URL}?${q.toString()}`,{cache:"no-store"});
@@ -289,7 +297,7 @@ export default function Home(){
      }).filter(r=>r.studentId||r.nisn);
      const filled=rows.filter(r=>r.nilai!=="");
      if(!filled.length) throw new Error("Belum ada nilai yang diisi.");
-     const data=await api("saveGrades",{unit,kelas:klass,mataPelajaran:subject,mapelId,kodeMapel,grades:JSON.stringify(filled)},session.token);
+     const data=await api("saveGrades",{unit,kelas:klass,mataPelajaran:subject,mapelId,kodeMapel,grades:JSON.stringify(filled),rows:JSON.stringify(filled),gradeRows:JSON.stringify(filled)},session.token,"POST");
      // Jangan menganggap tersimpan hanya karena request berhasil.
      // Baca kembali dari server dan verifikasi nilai yang baru dikirim.
      const verifyParams={unit,kelas:klass,mataPelajaran:subject};
