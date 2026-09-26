@@ -19,6 +19,31 @@ function getSession(){
 }
 function saveSession(session){sessionStorage.setItem("raport_session",JSON.stringify(session))}
 function clearSession(){sessionStorage.removeItem("raport_session")}
+function arrayFromResponse(data,...keys){
+  for(const key of keys){if(Array.isArray(data?.[key])) return data[key]}
+  if(Array.isArray(data)) return data
+  return []
+}
+function pick(obj,...keys){
+  for(const key of keys){if(obj&&obj[key]!==undefined&&obj[key]!==null&&String(obj[key]).trim()!=="") return obj[key]}
+  return ""
+}
+function normalizeStudent(s){
+  if(Array.isArray(s)) return {studentId:s[0]||"",nisn:s[1]||"",namaSiswa:s[2]||"",unit:s[3]||"",kelas:s[4]||""}
+  return {studentId:pick(s,"studentId","STUDENT_ID","id","ID"),nisn:pick(s,"nisn","NISN"),namaSiswa:pick(s,"namaSiswa","NAMA_SISWA","nama","NAMA"),unit:pick(s,"unit","UNIT"),kelas:pick(s,"kelas","KELAS","namaKelas","NAMA_KELAS")}
+}
+function normalizeAssignment(a){
+  if(Array.isArray(a)) return {unit:a[0]||"",kelas:a[1]||"",mataPelajaran:a[2]||"",mapelId:a[3]||"",guruId:a[4]||""}
+  return {unit:pick(a,"unit","UNIT"),kelas:pick(a,"kelas","KELAS","namaKelas","NAMA_KELAS"),mataPelajaran:pick(a,"mataPelajaran","MATA_PELAJARAN","namaMapel","NAMA_MAPEL","namaMapelRaport","NAMA_MAPEL_RAPORT"),mapelId:pick(a,"mapelId","MAPEL_ID","idMapel","ID_MAPEL"),guruId:pick(a,"guruId","ID_GURU","idGuru")}
+}
+function normalizeSubject(s){
+  if(Array.isArray(s)) return {mapelId:s[0]||"",namaMapel:s[1]||"",namaArab:s[2]||"",unit:s[3]||""}
+  return {mapelId:pick(s,"mapelId","MAPEL_ID","idMapel","ID_MAPEL"),namaMapel:pick(s,"namaMapel","NAMA_MAPEL","namaMapelRaport","NAMA_MAPEL_RAPORT","mataPelajaran","MATA_PELAJARAN"),namaArab:pick(s,"namaArab","NAMA_ARAB","namaArabRaport","NAMA_ARAB_RAPORT"),unit:pick(s,"unit","UNIT")}
+}
+function normalizeClass(k){
+  if(Array.isArray(k)) return {kelas:k[0]||"",unit:k[1]||""}
+  return {kelas:pick(k,"kelas","KELAS","namaKelas","NAMA_KELAS","nama"),unit:pick(k,"unit","UNIT")}
+}
 
 const LOGO="https://raw.githubusercontent.com/smaislamalghozali103-byte/raport_pondok_integrasi/main/public/assets/logo-ypi-al-ghozali.png";
 const subjects=[
@@ -42,16 +67,17 @@ function Icon({type}){const p={home:"M3 10 12 3l9 7M5 9v12h14V9M9 21v-6h6v6",edi
 
 export default function Home(){
  const [session,setSession]=useState(null),[login,setLogin]=useState(false),[user,setUser]=useState(""),[pin,setPin]=useState(""),[err,setErr]=useState(""),[loading,setLoading]=useState(false);
- const [role,setRole]=useState(""),[profile,setProfile]=useState(null),[studentsData,setStudentsData]=useState([]),[assignments,setAssignments]=useState([]),[apiError,setApiError]=useState(""),[gradeError,setGradeError]=useState(""),[saving,setSaving]=useState(false);
+ const [role,setRole]=useState(""),[profile,setProfile]=useState(null),[studentsData,setStudentsData]=useState([]),[assignments,setAssignments]=useState([]),[subjectsData,setSubjectsData]=useState([]),[classesData,setClassesData]=useState([]),[apiError,setApiError]=useState(""),[gradeError,setGradeError]=useState(""),[saving,setSaving]=useState(false);
 
  const [menu,setMenu]=useState("input"),[unit,setUnit]=useState(""),[klass,setKlass]=useState(""),[subject,setSubject]=useState(""),[student,setStudent]=useState(0),[grades,setGrades]=useState(initial),[saved,setSaved]=useState(false);
  const [gradeRows,setGradeRows]=useState([]);
  const effectiveStudents=studentsData;
  const effectiveAssignments=assignments||[];
- const units=[...new Set(effectiveStudents.map(s=>s.unit||s.UNIT).filter(Boolean))];
- const classes=[...new Set(effectiveStudents.map(s=>s.kelas||s.KELAS).filter(Boolean))];
- const assignedSubjects=[...new Set(effectiveAssignments.map(a=>a.mataPelajaran||a.MATA_PELAJARAN||a.namaMapel||a.NAMA_MAPEL).filter(Boolean))];
- const availableSubjects=assignedSubjects;
+ const units=[...new Set([...effectiveStudents.map(s=>s.unit),...classesData.map(k=>k.unit)].filter(Boolean))];
+ const classes=[...new Set([...classesData.map(k=>k.kelas),...effectiveStudents.map(s=>s.kelas)].filter(Boolean))];
+ const assignedSubjects=[...new Set(effectiveAssignments.map(a=>a.mataPelajaran).filter(Boolean))];
+ const masterSubjects=[...new Set(subjectsData.map(s=>s.namaMapel).filter(Boolean))];
+ const availableSubjects=assignedSubjects.length?assignedSubjects:masterSubjects;
  const studentsForClass=effectiveStudents.filter(s=>(s.unit||s.UNIT||"")===unit && (s.kelas||s.KELAS||"")===klass);
  const selectedAssignment=effectiveAssignments.find(a=>{
    const au=a.unit||a.UNIT||"";
@@ -120,14 +146,26 @@ export default function Home(){
      }
      return;
    }
-   try{
-     const stu=await api("students",{},token);
-     setStudentsData(Array.isArray(stu.students||stu.data)?(stu.students||stu.data):[]);
-   }catch(e){setApiError("Data siswa belum termuat: "+e.message)}
-   try{
-     const ass=await api("assignments",{},token);
-     setAssignments(Array.isArray(ass.assignments||ass.data)?(ass.assignments||ass.data):[]);
-   }catch(e){setApiError(prev=>prev?prev+" | Penugasan belum termuat: "+e.message:"Penugasan belum termuat: "+e.message)}
+   const results=await Promise.allSettled([
+     api("students",{},token),
+     api("assignments",{},token),
+     api("subjects",{},token),
+     api("classes",{},token)
+   ]);
+   const errors=[];
+   const stu=results[0].status==="fulfilled"?arrayFromResponse(results[0].value,"students","data","rows"):null;
+   const ass=results[1].status==="fulfilled"?arrayFromResponse(results[1].value,"assignments","data","rows"):null;
+   const sub=results[2].status==="fulfilled"?arrayFromResponse(results[2].value,"subjects","data","rows"):null;
+   const cls=results[3].status==="fulfilled"?arrayFromResponse(results[3].value,"classes","data","rows"):null;
+   if(stu!==null) setStudentsData(stu.map(normalizeStudent).filter(s=>s.studentId||s.nisn||s.namaSiswa));
+   else errors.push("MASTER SISWA: "+results[0].reason.message);
+   if(ass!==null) setAssignments(ass.map(normalizeAssignment).filter(a=>a.mataPelajaran||a.mapelId));
+   else errors.push("PENUGASAN GURU: "+results[1].reason.message);
+   if(sub!==null) setSubjectsData(sub.map(normalizeSubject).filter(s=>s.namaMapel));
+   else errors.push("MASTER MAPEL: "+results[2].reason.message);
+   if(cls!==null) setClassesData(cls.map(normalizeClass).filter(k=>k.kelas));
+   else errors.push("MASTER KELAS: "+results[3].reason.message);
+   if(errors.length) setApiError(errors.join(" | "));
  };
  const submit=async e=>{e.preventDefault();setErr("");if(!user.trim()||!/^\d{6,}$/.test(pin)){setErr("Username wajib diisi dan PIN minimal 6 digit.");return}
    setLoading(true);
@@ -141,7 +179,7 @@ export default function Home(){
      await loadData(token);
    }catch(e){setErr(e.message)}finally{setLoading(false)}
  };
- const logout=()=>{clearSession();setSession(null);setLogin(false);setRole("");setProfile(null);setStudentsData([]);setAssignments([]);setUser("");setPin("")};
+ const logout=()=>{clearSession();setSession(null);setLogin(false);setRole("");setProfile(null);setStudentsData([]);setAssignments([]);setSubjectsData([]);setClassesData([]);setUser("");setPin("")};
  const setGrade=(name,v)=>{
    if(v===""||(/^\d{0,3}$/.test(v)&&Number(v)<=100)){
      setGrades(g=>({...g,[name]:v}));
@@ -193,7 +231,7 @@ export default function Home(){
   <div className="module-title"><div><span className="module-kicker">INPUT NILAI</span><h3>Pilih konteks penilaian</h3><p>Filter tampil di dalam panel ini dan tidak memenuhi halaman ketika fungsi lain dipilih.</p></div></div>
   <div className="filter-grid"><label>Tahun Ajaran<select><option>2026/2027 — Ganjil</option></select></label><label>Jenjang<select value={unit} onChange={e=>setUnit(e.target.value)}>{units.map(x=><option key={x}>{x}</option>)}</select></label><label>Kelas<select value={klass} onChange={e=>setKlass(e.target.value)}>{classes.map(x=><option key={x}>{x}</option>)}</select></label><label>Mata Pelajaran<select value={subject} onChange={e=>setSubject(e.target.value)}>{availableSubjects.map(x=><option key={x}>{x}</option>)}</select></label></div>
  </div>
- <section className="card module-card"><div className="card-head"><div><h3>Input Nilai</h3><p>{subject} • {klass} • {unit}</p></div><span className="pill">{saving?"Menyimpan...":saved?"Tersimpan":"Belum disimpan"}</span></div><div className="table-scroll"><table><thead><tr><th>No</th><th>NISN</th><th>Nama Siswa</th><th>Kelas</th><th>Nilai</th><th>Predikat</th></tr></thead><tbody>{studentsForClass.slice(0,200).map((s,i)=>{const r=normalizeGradeRow(s,i);const v=grades[r.name]??r.value??"";return <tr className={i===student?"selected":""} key={r.studentId||r.nisn||i}><td>{i+1}</td><td>{r.nisn}</td><td><button className="student" onClick={()=>setStudent(i)}>{r.name}</button></td><td>{r.cls}</td><td><input value={v} inputMode="numeric" maxLength={3} placeholder="-" onChange={e=>setGrade(r.name,e.target.value)}/></td><td><em className={"badge "+pred(v).toLowerCase()}>{pred(v)}</em></td></tr>})}</tbody></table></div><div className="foot">Menampilkan {studentsForClass.length||0} siswa • data dari Apps Script {gradeError&&<span className="error">{gradeError}</span>} {apiError&&<span className="error">{apiError}</span>} </div></section>
+ <section className="card module-card"><div className="card-head"><div><h3>Input Nilai</h3><p>{subject} • {klass} • {unit}</p></div><span className="pill">{saving?"Menyimpan...":saved?"Tersimpan":"Belum disimpan"}</span></div><div className="table-scroll"><table><thead><tr><th>No</th><th>NISN</th><th>Nama Siswa</th><th>Kelas</th><th>Nilai</th><th>Predikat</th></tr></thead><tbody>{studentsForClass.slice(0,200).map((s,i)=>{const r=normalizeGradeRow(s,i);const v=grades[r.name]??r.value??"";return <tr className={i===student?"selected":""} key={r.studentId||r.nisn||i}><td>{i+1}</td><td>{r.nisn}</td><td><button className="student" onClick={()=>setStudent(i)}>{r.name}</button></td><td>{r.cls}</td><td><input value={v} inputMode="numeric" maxLength={3} placeholder="-" onChange={e=>setGrade(r.name,e.target.value)}/></td><td><em className={"badge "+pred(v).toLowerCase()}>{pred(v)}</em></td></tr>})}</tbody></table></div><div className="foot">Menampilkan {studentsForClass.length||0} siswa • Master Siswa/Mapel/Kelas/Penugasan dari Apps Script {gradeError&&<span className="error">{gradeError}</span>} {apiError&&<span className="error">{apiError}</span>} </div></section>
  </>}
  {menu==="rekap"&&<section className="card module-card"><div className="card-head"><div><h3>Rekap Nilai</h3><p>Ringkasan progres input berdasarkan data yang nanti berasal dari Apps Script.</p></div></div><div className="stats compact-stats">{[["617","Jumlah Siswa","Siswa aktif","green"],["124","Jumlah Guru","Guru aktif","gold"],["63","Jumlah Mapel","Mata pelajaran","blue"],["84%","Input Hari Ini","Progress nilai","purple"]].map(x=><div className="stat" key={x[1]}><i className={x[3]}>{x[0]==="84%"?"✓":"◆"}</i><div><span>{x[1]}</span><b>{x[0]}</b><small>{x[2]}</small></div></div>)}</div><div className="table-scroll"><table><thead><tr><th>Jenjang</th><th>Kelas</th><th>Mata Pelajaran</th><th>Guru</th><th>Status</th></tr></thead><tbody><tr><td>SMP</td><td>{klass}</td><td>{subject}</td><td>Belum terhubung</td><td><em className="badge b">Menunggu Apps Script</em></td></tr></tbody></table></div></section>}
  {menu==="raport"&&<aside className="card preview module-card"><div className="card-head"><div><h3>Preview Raport</h3><p>Render web • bukan tampilan Excel</p></div><button className="tiny" onClick={()=>window.print()}>Cetak</button></div><article className="report"><div className="rhead"><img src={LOGO} alt="Logo"/><div><h1>كشف الدرجات</h1><p>للامتحان التّحريري لمنتصف الفصل الدّراسي الأوّل</p></div><img src={LOGO} alt="Logo"/></div><div className="identity"><span><b>الاسم كامل :</b> {current[0]}</span><span><b>الصّفّ :</b> {klass==="1 - A"?"الأوّل - A":klass==="1 - B"?"الأوّل - B":klass==="2 - A"?"الثّاني - A":klass==="3 - A"?"الثّالث - A":klass}</span><span><b>الرقم :</b> {current[1]}</span><span><b>العام الدّراسي :</b> ٢۰۲٧ / ٢۰۲٦</span></div><table className="report-table"><thead><tr><th colSpan="3">الدّرجة الّتي حصلت عليها الطالب / الطالبة</th><th>Mata Pelajaran</th><th>المواد الدّراسيّة</th><th className="report-no-head">الرقم</th></tr></thead><tbody>{subjects.map((s,i)=>{let v=Number(grades[s[0]]);let value=Number.isFinite(v)?v:0;return <tr key={s[0]}><td className="grade-word">{arabicNumberWord(value)}</td><td className="grade-western">{Number.isFinite(v)?v:""}</td><td className="grade-arabic">{Number.isFinite(v)?toArabicDigits(v):""}</td><td className="subject-id">{s[0]}</td><td className="subject-ar" dir="rtl">{s[1]}</td><td className="arabic-no">{toArabicDigits(i+1)}</td></tr>})}<tr className="sum"><td></td><td>{nums.length?total:""}</td><td>{nums.length?toArabicDigits(total):""}</td><td>Jumlah</td><td dir="rtl">المجـموع</td><td></td></tr><tr className="sum"><td></td><td>{nums.length?avg.toFixed(2):""}</td><td>{nums.length?toArabicDigits(avg.toFixed(2)):""}</td><td>Nilai Rata Rata</td><td dir="rtl">النتيجـة المـعدّلة</td><td></td></tr><tr className="sum"><td>الأول</td><td>1</td><td>١</td><td>Peringkat</td><td dir="rtl">المقام</td><td></td></tr></tbody></table><div className="date">تحريرا بغونونج سندور، ۱۰ اكتوبار ٢۰۲٦/ ٢٧ ربيع الآخر ۱٤٤۸</div><div className="sign"><div><b>ولي الأمر</b><span className="sign-line"></span><small>________________</small></div><div><b>ولي الفصل</b><span className="sign-line"></span><small>Amalia Nur Fariha, S.Pd</small></div><div><b>مـدير المـعهد</b><span className="sign-line"></span><small>M. Ya'qub Unang, S.Ag</small></div></div></article></aside>}
