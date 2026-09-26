@@ -161,8 +161,12 @@ export default function Home(){
    if(unit==="TMMIA"){
      const group=mukimGroupForClass(klass);
      if(!group) return [];
-     const ids=new Set(curriculumData.filter(c=>c.group===group).map(c=>String(c.mapelId||"")).filter(Boolean));
-     return [...new Set(subjectCatalog.filter(x=>String(x.unit||"").trim().toUpperCase()==="TMMIA"&&ids.has(String(x.mapelId||""))).map(x=>x.displayName).filter(Boolean))];
+     return [...new Map(
+       curriculumData
+         .filter(c=>String(c.group||"").trim()===String(group).trim() && c.mapelId && c.mataPelajaran)
+         .sort((a,b)=>Number(a.urut||0)-Number(b.urut||0))
+         .map(c=>[String(c.mapelId),c.mataPelajaran])
+     ).values()];
    }
    return [...new Set(subjectCatalog.filter(x=>String(x.unit||"").trim().toUpperCase()===unit).map(x=>x.displayName).filter(Boolean))];
  },[subjectCatalog,unit,klass,curriculumData]);
@@ -195,6 +199,26 @@ export default function Home(){
        namaMapelRaport:exact.namaMapelRaport||master?.namaMapelRaport||master?.namaMapel||subject,
        namaArabRaport:exact.namaArabRaport||master?.namaArabRaport||master?.namaArab||""
      };
+   }
+
+   if(unit==="TMMIA"){
+     const group=mukimGroupForClass(klass);
+     const cur=curriculumData.find(c=>
+       String(c.group||"").trim()===String(group||"").trim() &&
+       String(c.mataPelajaran||"").trim()===String(subject||"").trim()
+     );
+     if(cur){
+       const master=subjectsData.find(s=>String(s.mapelId||"")===String(cur.mapelId||""));
+       return {
+         mapelId:cur.mapelId||"",
+         mataPelajaran:cur.mataPelajaran||subject,
+         displayName:cur.mataPelajaran||subject,
+         namaMapelSumber:cur.mataPelajaran||subject,
+         namaMapelRaport:master?.namaMapelRaport||master?.namaMapel||cur.mataPelajaran||subject,
+         namaArabRaport:cur.namaArab||master?.namaArabRaport||master?.namaArab||"",
+         kodeMapel:master?.kodeMapel||""
+       };
+     }
    }
 
    // PRIORITAS 2: master mapel pada jenjang yang sama.
