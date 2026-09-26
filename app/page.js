@@ -8,7 +8,7 @@ async function api(action, params={}, token="", method="GET"){
   if(method==="POST"){
     const body={action,...params};
     if(token){ body.token=token; body.sessionToken=token; }
-    const res=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),cache:"no-store"});
+    const res=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body),cache:"no-store"});
     const data=await res.json();
     if(!data.ok) throw new Error(data.message||data.error||"Permintaan API gagal.");
     return data;
@@ -103,14 +103,7 @@ function mukimGroupForClass(value){
 }
 
 const LOGO="https://raw.githubusercontent.com/smaislamalghozali103-byte/raport_pondok_integrasi/main/public/assets/logo-ypi-al-ghozali.png";
-const subjects=[
-["Tamrin Lughoh","تمرين اللغة"],["Mutholaah","المطالعة"],["Aqidah","العقيدة"],["Hadist","الحديث"],["Fiqih","الفقه"],
-["Tarikh Islam","التاريخ الإسلامي"],["Tajwid","التجويد"],["Imla","الإملاء"],["Khot","الخط"],["Mahfudzot","المحفوظات"],
-["Pendidikan Agama Islam","التربية الدينية الإسلامية"],["Bahasa Indonesia","اللغة الإندونيسية"],["Bahasa Inggris","اللغة الإنجليزية"],
-["Matematika","الرياضيات"],["Ilmu Pengetahuan Alam","علم الطبيعة"],["Ilmu Pengetahuan Sosial","علم الاجتماع"],
-["Pendidikan Kewarganegaraan","التربية الوطنية"],["Informatika","علم الحاسوب"],["Pendidikan Jasmani dan Kesehatan","الرياضة البدنية والصحية"],
-["Seni Budaya","الفنون الجميلة"],["Bahasa Sunda","اللغة السوندية"]
-];
+const subjects=[];
 const students=[
 ["AANISAH CELYANI","3148999544"],["ABDILLAH RAHMAN","3148999545"],["AHMAD FAHRI","3148999546"],
 ["ALI ZAINUDDIN","3148999547"],["AMIRUL HAKIM","3148999548"]
