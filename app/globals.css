@@ -73,3 +73,104 @@
  .report-table th,.report-table td{padding:2.5mm 1.5mm}
  .date{font-size:9px}.sign{font-size:9px;margin-top:24px}.sign small{font-size:8px}
 }
+
+/* ===== TABLE & ARABIC TYPOGRAPHY V4 ===== */
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap');
+
+.report,
+.report table{
+  font-family:"Noto Naskh Arabic","Amiri","Times New Roman",serif;
+}
+.report-table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+  font-size:9px;
+  direction:ltr;
+}
+.report-table thead th{
+  height:34px;
+  vertical-align:middle;
+  text-align:center;
+  font-weight:700;
+  font-size:9px;
+  padding:6px 5px;
+  background:#f6efdf;
+  color:#111;
+  border:1px solid #202820;
+}
+.report-table tbody td{
+  height:29px;
+  vertical-align:middle;
+  padding:4px 6px;
+  border:1px solid #202820;
+  color:#111;
+  font-weight:400;
+}
+.report-table th:first-child,.report-table td:first-child{
+  width:7%;
+  text-align:center;
+  font-family:Arial,sans-serif;
+}
+.report-table th:nth-child(2),.report-table td:nth-child(2){
+  width:29%;
+  direction:rtl;
+  text-align:right;
+  unicode-bidi:plaintext;
+  font-family:"Noto Naskh Arabic","Amiri",serif;
+  font-size:11px;
+  line-height:1.35;
+}
+.report-table th:nth-child(3),.report-table td:nth-child(3){
+  width:32%;
+  text-align:left;
+  font-family:"Times New Roman",Arial,sans-serif;
+  font-size:9px;
+  line-height:1.25;
+}
+.report-table th:nth-child(4),.report-table td:nth-child(4){
+  width:14%;
+  text-align:center;
+  font-family:Arial,sans-serif;
+  font-size:10px;
+  font-weight:600;
+}
+.report-table th:nth-child(5),.report-table td:nth-child(5){
+  width:18%;
+  text-align:center;
+  font-family:Arial,sans-serif;
+  font-size:9px;
+  font-weight:600;
+}
+.report-table tbody tr:nth-child(even):not(.sum) td{
+  background:#fffdf8;
+}
+.report-table .sum td{
+  height:31px;
+  background:#f8f5ed;
+  font-weight:700;
+  font-size:9px;
+}
+.report-table .sum td:first-child{
+  text-align:center;
+}
+.identity{
+  font-family:"Noto Naskh Arabic","Amiri","Times New Roman",serif;
+}
+.identity b{
+  font-weight:700;
+}
+.rhead h1{
+  font-family:"Amiri","Noto Naskh Arabic","Times New Roman",serif;
+  font-weight:700;
+}
+.rhead p,.date,.sign{
+  font-family:"Noto Naskh Arabic","Amiri","Times New Roman",serif;
+}
+@media print{
+ .report-table{font-size:8.5px}
+ .report-table thead th{font-size:8.5px;height:31px}
+ .report-table tbody td{height:27px;padding:3.5px 5px}
+ .report-table th:nth-child(2),.report-table td:nth-child(2){font-size:10px}
+ .report-table th:nth-child(3),.report-table td:nth-child(3){font-size:8.5px}
+}
