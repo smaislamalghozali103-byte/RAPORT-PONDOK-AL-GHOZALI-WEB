@@ -556,3 +556,62 @@
 .report-table .predikat,
 .report-table th.predikat,
 .report-table td.predikat{display:none !important}
+
+
+/* ===== OFFICIAL RAPORT FRAME V8 ===== */
+.report{
+  position:relative;
+  width:100%;
+  aspect-ratio:1209 / 2047;
+  min-height:0;
+  height:auto;
+  margin:0 auto;
+  padding:16mm 14mm 12mm;
+  border:1.4px solid #d71920 !important;
+  outline:none !important;
+  border-radius:0;
+  box-shadow:none;
+  background-color:#fff;
+  background-image:url("/RAPORT-PONDOK-AL-GHOZALI-WEB/ornamen-raport.webp");
+  background-repeat:no-repeat;
+  background-position:center center;
+  background-size:100% 100%;
+  overflow:hidden;
+}
+.report:before,
+.report:after{
+  display:none !important;
+  content:none !important;
+}
+
+/* Area isi mengikuti batas dalam ornamen resmi */
+.report .rhead,
+.report .identity,
+.report .report-table,
+.report .date,
+.report .sign{
+  position:relative;
+  z-index:1;
+}
+
+.rhead{margin-left:5mm;margin-right:5mm}
+.identity{margin-left:5mm;margin-right:5mm}
+.report-table{width:calc(100% - 10mm);margin-left:auto;margin-right:auto}
+.date{margin-left:5mm;margin-right:5mm}
+.sign{margin-left:3mm;margin-right:3mm}
+
+@media print{
+  .report{
+    width:210mm;
+    height:auto;
+    aspect-ratio:1209 / 2047;
+    min-height:0;
+    padding:16mm 14mm 12mm;
+    border:1.4px solid #d71920 !important;
+    background-image:url("/RAPORT-PONDOK-AL-GHOZALI-WEB/ornamen-raport.webp");
+    background-size:100% 100%;
+    background-position:center;
+    background-repeat:no-repeat;
+  }
+  @page{size:A4 portrait;margin:0}
+}
