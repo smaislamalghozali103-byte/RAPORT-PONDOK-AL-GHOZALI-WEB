@@ -1,0 +1,1 @@
+Place the official school logo at public/assets/logo-ypi-al-ghozali.png. The app intentionally does not embed or display the spreadsheet itself.
