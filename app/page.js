@@ -30,8 +30,19 @@ export default function Home(){
  const setGrade=v=>{if(v===""||(/^\d{0,3}$/.test(v)&&Number(v)<=100)){setGrades(g=>({...g,[subject]:v}));setSaved(false)}};
 
  if(!login)return <main className="login-page"><div className="orb a"/><div className="orb b"/><section className="login-card">
-   <div className="login-brand"><img src={LOGO} alt="Logo resmi YPI Al-Ghozali"/><span className="eyebrow">SISTEM RAPORT DIGITAL</span><h1>Pondok Modern<br/><b>Al-Ghozali</b></h1><p>Platform pengelolaan nilai dan raport dengan antarmuka modern, elegan, responsif, dan siap dihubungkan ke Google Spreadsheet + Apps Script.</p><div className="feature-row"><span>✓ Input Nilai</span><span>✓ Raport Web</span><span>✓ Cetak A4</span></div></div>
-   <form className="login-form" onSubmit={submit}><div><h2>Selamat datang</h2><p>Silakan masuk untuk melanjutkan.</p></div><label>Username<input value={user} onChange={e=>setUser(e.target.value)} placeholder="Username"/></label><label>PIN<input value={pin} onChange={e=>setPin(e.target.value.replace(/\D/g,""))} type="password" inputMode="numeric" maxLength={12} placeholder="Minimal 6 digit"/></label>{err&&<div className="error">{err}</div>}<button className="primary" type="submit"><Icon type="logout"/> Masuk</button><button className="demo" type="button" onClick={()=>{setUser("Demo Admin");setLogin(true)}}>Lihat Demo Dashboard</button><small>TA 2026/2027 • PTS Ganjil</small></form>
+   <div className="login-brand">
+   <img src={LOGO} alt="Logo Pondok Modern Al-Ghozali"/>
+   <span className="eyebrow">SISTEM INFORMASI RAPORT</span>
+   <h1>RAPORT <b>INTEGRASI</b></h1>
+   <h2>PONDOK MODERN AL-GHOZALI</h2>
+   <div className="login-guide">
+    <strong>PANDUAN LOGIN</strong>
+    <p><b>Guru</b> — gunakan username dan PIN yang telah diberikan.</p>
+    <p><b>Wali Kelas</b> — masuk dengan akun yang telah terdaftar untuk mengakses kelas bimbingan.</p>
+    <p><b>Admin</b> — gunakan akses admin untuk mengelola seluruh sistem.</p>
+   </div>
+ </div>
+   <form className="login-form" onSubmit={submit}><div><h2>Masuk ke Sistem</h2><p>Silakan masukkan username dan PIN Anda.</p></div><label>Username<input value={user} onChange={e=>setUser(e.target.value)} placeholder="Masukkan username" autoComplete="username"/></label><label>PIN<input value={pin} onChange={e=>setPin(e.target.value.replace(/\D/g,""))} type="password" inputMode="numeric" maxLength={12} placeholder="Masukkan PIN" autoComplete="current-password"/></label>{err&&<div className="error">{err}</div>}<button className="primary" type="submit"><Icon type="logout"/> Masuk</button><small className="login-help">Lupa PIN? Hubungi Admin Sistem.</small><small>TA 2026/2027 • PTS Ganjil</small></form>
  </section><footer>© 2026 Pondok Modern Al-Ghozali</footer></main>;
 
  return <main className="shell"><header className="topbar"><div className="brand"><img src={LOGO} alt="Logo YPI Al-Ghozali"/><div><b>RAPORT PONDOK MODERN AL-GHOZALI</b><span>TA 2026/2027 • PTS GANJIL</span></div></div><div className="account"><div className="avatar">AG</div><div><b>{user||"Demo Admin"}</b><span>Administrator</span></div><button onClick={()=>setLogin(false)}>Keluar</button></div></header>
