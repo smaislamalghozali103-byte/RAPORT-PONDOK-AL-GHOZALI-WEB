@@ -108,7 +108,7 @@ export default function Home(){
  const [gradeRows,setGradeRows]=useState([]);
  const effectiveStudents=studentsData;
  const effectiveAssignments=assignments||[];
- const units=[...new Set([...effectiveStudents.map(s=>s.unit),...classesData.map(k=>k.unit)].filter(Boolean))];
+ const units=["SMP","SMA","TMMIA"];
  const classes=[...new Set([
    ...classesData.filter(k=>!unit||k.unit===unit).map(k=>k.kelas),
    ...effectiveStudents.filter(s=>!unit||s.unit===unit).map(s=>s.kelas)
@@ -133,12 +133,9 @@ export default function Home(){
    });
    return [...byKey.values()];
  },[effectiveAssignments,subjectsData]);
- const availableSubjects=useMemo(()=>{
+ const availableSubjects=useMemo(()=>{ 
    if(!unit) return [];
-   const assigned=subjectCatalog.filter(x=>x.unit===unit);
-   const source=assigned.length
-     ? assigned
-     : subjectCatalog.filter(x=>x.unit===unit);
+   const source=subjectCatalog.filter(x=>String(x.unit||"").trim().toUpperCase()===unit);
    return [...new Set(source.map(x=>x.displayName).filter(Boolean))];
  },[subjectCatalog,unit]);
 
@@ -149,7 +146,7 @@ export default function Home(){
  useEffect(()=>{
    if(unit && subject && !availableSubjects.includes(subject)) setSubject("");
  },[unit,subject,availableSubjects.join("|")]);
- const studentsForClass=effectiveStudents.filter(s=>(s.unit||s.UNIT||"")===unit && (s.kelas||s.KELAS||"")===klass);
+ const studentsForClass=effectiveStudents.filter(s=>{const sKelas=s.kelas||s.KELAS||"";if(sKelas!==klass)return false;if(unit==="TMMIA")return true;return (s.unit||s.UNIT||"")===unit;});
  const selectedAssignment=useMemo(()=>{
    if(!unit || !subject) return null;
 
