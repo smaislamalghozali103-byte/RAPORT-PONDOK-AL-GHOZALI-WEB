@@ -1,6 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const API_URL="https://script.google.com/macros/s/AKfycbxwA8gv9T0m7hV3kR57kygGnrU8OLPsmu-tFPVASgB_GxUSNqlyIs8XzgMOyIPeG00D/exec";
+
+async function api(action, params={}, token=""){
+  const q=new URLSearchParams({action,...params});
+  if(token) q.set("token",token);
+  const res=await fetch(`${API_URL}?${q.toString()}`,{cache:"no-store"});
+  const data=await res.json();
+  if(!data.ok) throw new Error(data.message||data.error||"Permintaan API gagal.");
+  return data;
+}
+
+function getSession(){
+  if(typeof window==="undefined") return null;
+  try{return JSON.parse(sessionStorage.getItem("raport_session")||"null")}catch{return null}
+}
+function saveSession(session){sessionStorage.setItem("raport_session",JSON.stringify(session))}
+function clearSession(){sessionStorage.removeItem("raport_session")}
 
 const LOGO="https://raw.githubusercontent.com/smaislamalghozali103-byte/raport_pondok_integrasi/main/public/assets/logo-ypi-al-ghozali.png";
 const subjects=[
@@ -23,10 +41,31 @@ function pred(v){const n=Number(v);return Number.isFinite(n)?n>=90?"A":n>=80?"B"
 function Icon({type}){const p={home:"M3 10 12 3l9 7M5 9v12h14V9M9 21v-6h6v6",edit:"M4 20h4L19 9l-4-4L4 16v4M13 6l4 4",chart:"M5 20V10M12 20V4M19 20v-7",file:"M6 3h8l4 4v14H6zM14 3v5h5M9 13h6M9 17h6",users:"M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M16 3a4 4 0 0 1 0 8M21 21v-2a4 4 0 0 0-3-4",gear:"M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM19 13a7 7 0 0 0 0-2l2-1-2-3-2 1a7 7 0 0 0-2-1l-.5-2h-3L11 7a7 7 0 0 0-2 1L7 7 5 10l2 1a7 7 0 0 0 0 2l-2 1 2 3 2-1a7 7 0 0 0 2 1l.5 2h3l.5-2a7 7 0 0 0 2-1l2 1 2-3-2-1Z",logout:"M10 17l5-5-5-5M15 12H3M21 19V5a2 2 0 0 0-2-2h-7"}[type];return <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={p}/></svg>}
 
 export default function Home(){
- const [login,setLogin]=useState(false),[user,setUser]=useState(""),[pin,setPin]=useState(""),[err,setErr]=useState("");
+ const [session,setSession]=useState(null),[login,setLogin]=useState(false),[user,setUser]=useState(""),[pin,setPin]=useState(""),[err,setErr]=useState(""),[loading,setLoading]=useState(false);
+ const [role,setRole]=useState(""),[profile,setProfile]=useState(null),[studentsData,setStudentsData]=useState([]),[assignments,setAssignments]=useState([]),[apiError,setApiError]=useState("");
+
  const [menu,setMenu]=useState("input"),[unit,setUnit]=useState("SMP"),[klass,setKlass]=useState("1 - A"),[subject,setSubject]=useState("Tamrin Lughoh"),[student,setStudent]=useState(0),[grades,setGrades]=useState(initial),[saved,setSaved]=useState(false);
- const current=students[student]; const nums=useMemo(()=>Object.values(grades).map(Number).filter(Number.isFinite),[grades]); const total=nums.reduce((a,b)=>a+b,0),avg=nums.length?total/nums.length:0;
- const submit=e=>{e.preventDefault();if(user.trim()&&/^\d{6,}$/.test(pin)){setLogin(true);setErr("")}else setErr("Username wajib diisi dan PIN minimal 6 digit.")};
+ const [gradeRows,setGradeRows]=useState([]);
+ const effectiveStudents=studentsData.length?studentsData:students;
+ const effectiveAssignments=assignments||[];
+ const units=[...new Set(effectiveStudents.map(s=>s.unit||s.UNIT).filter(Boolean))];
+ const classes=[...new Set(effectiveStudents.map(s=>s.kelas||s.KELAS).filter(Boolean))];
+ const assignedSubjects=[...new Set(effectiveAssignments.map(a=>a.mataPelajaran||a.MATA_PELAJARAN||a.namaMapel||a.NAMA_MAPEL).filter(Boolean))];
+ const availableSubjects=assignedSubjects.length?assignedSubjects:subjects.map(s=>s[0]);
+
+ const current=effectiveStudents[student]||students[student]; const nums=useMemo(()=>Object.values(grades).map(Number).filter(Number.isFinite),[grades]); const total=nums.reduce((a,b)=>a+b,0),avg=nums.length?total/nums.length:0;
+ useEffect(()=>{const s=getSession();if(!s?.token)return;setSession(s);setLogin(true);setUser(s.username||"");setRole(s.role||"");setProfile(s.user||null);loadData(s.token)},[]);
+ const loadData=async(token)=>{setApiError("");try{
+   const [dash,stu,ass]=await Promise.all([api("dashboard",{},token),api("students",{},token),api("assignments",{},token)]);
+   setStudentsData(stu.students||stu.data||[]);
+   setAssignments(ass.assignments||ass.data||[]);
+   const u=dash.user||dash.profile||safelyUser(token);
+ }catch(e){setApiError(e.message);if(/SESSION_INVALID|UNAUTHORIZED|AUTH/i.test(e.message)){clearSession();setLogin(false);setSession(null)}}};
+ const safelyUser=()=>null;
+ const submit=async e=>{e.preventDefault();setErr("");if(!user.trim()||!/^\\d{6,}$/.test(pin)){setErr("Username wajib diisi dan PIN minimal 6 digit.");return}
+   setLoading(true);try{const data=await api("login",{username:user.trim(),pin});const s={token:data.token,username:data.user?.username||user.trim(),role:data.user?.role||"",user:data.user||null};saveSession(s);setSession(s);setLogin(true);setRole(s.role);setProfile(s.user);setPin("");await loadData(s.token)}catch(e){setErr(e.message)}finally{setLoading(false)}
+ };
+ const logout=()=>{clearSession();setSession(null);setLogin(false);setRole("");setProfile(null);setStudentsData([]);setAssignments([]);setUser("");setPin("")};
  const setGrade=v=>{if(v===""||(/^\d{0,3}$/.test(v)&&Number(v)<=100)){setGrades(g=>({...g,[subject]:v}));setSaved(false)}};
 
  if(!login)return <main className="login-page"><div className="orb a"/><div className="orb b"/><section className="login-card">
@@ -41,18 +80,18 @@ export default function Home(){
     <p><b>Admin</b> — gunakan akses admin untuk mengelola seluruh sistem.</p>
    </div>
  </div>
-   <form className="login-form" onSubmit={submit}><div><h2>Masuk ke Sistem</h2><p>Silakan masukkan username dan PIN Anda.</p></div><label>Username<input value={user} onChange={e=>setUser(e.target.value)} placeholder="Masukkan username" autoComplete="username"/></label><label>PIN<input value={pin} onChange={e=>setPin(e.target.value.replace(/\D/g,""))} type="password" inputMode="numeric" maxLength={12} placeholder="Masukkan PIN" autoComplete="current-password"/></label>{err&&<div className="error">{err}</div>}<button className="primary" type="submit"><Icon type="logout"/> Masuk</button><small className="login-help">Lupa PIN? Hubungi Admin Sistem.</small><small>TA 2026/2027 • PTS Ganjil</small></form>
+   <form className="login-form" onSubmit={submit}><div><h2>Masuk ke Sistem</h2><p>Silakan masukkan username dan PIN Anda.</p></div><label>Username<input value={user} onChange={e=>setUser(e.target.value)} placeholder="Masukkan username" autoComplete="username"/></label><label>PIN<input value={pin} onChange={e=>setPin(e.target.value.replace(/\D/g,""))} type="password" inputMode="numeric" maxLength={12} placeholder="Masukkan PIN" autoComplete="current-password"/></label>{err&&<div className="error">{err}</div>}<button className="primary" type="submit" disabled={loading}><Icon type="logout"/> {loading?"Memeriksa...":"Masuk"}</button><small className="login-help">Lupa PIN? Hubungi Admin Sistem.</small><small>TA 2026/2027 • PTS Ganjil</small></form>
  </section><footer>© 2026 Pondok Modern Al-Ghozali</footer></main>;
 
- return <main className="shell"><header className="topbar"><div className="brand"><img src={LOGO} alt="Logo YPI Al-Ghozali"/><div><b>RAPORT PONDOK MODERN AL-GHOZALI</b><span>TA 2026/2027 • PTS GANJIL</span></div></div><div className="account"><div className="avatar">AG</div><div><b>{user||"Demo Admin"}</b><span>Administrator</span></div><button onClick={()=>setLogin(false)}>Keluar</button></div></header>
+ return <main className="shell"><header className="topbar"><div className="brand"><img src={LOGO} alt="Logo YPI Al-Ghozali"/><div><b>RAPORT PONDOK MODERN AL-GHOZALI</b><span>TA 2026/2027 • PTS GANJIL</span></div></div><div className="account"><div className="avatar">AG</div><div><b>{profile?.namaGuru||profile?.name||user}</b><span>{role==="WALI_KELAS"?"Wali Kelas":role==="GURU"?"Guru":role==="ADMIN"?"Administrator":role}</span></div><button onClick={logout}>Keluar</button></div></header>
  <div className="layout"><aside className="sidebar"><span className="menu-title">MENU UTAMA</span>{[["input","Input Nilai","edit"],["rekap","Rekap Nilai","chart"],["raport","Raport Web","file"],["master","Master Data","users"]].map(x=><button key={x[0]} className={menu===x[0]?"nav active":"nav"} onClick={()=>setMenu(x[0])}><Icon type={x[2]}/>{x[1]}</button>)}<span className="menu-title mt">SISTEM</span><button className={menu==="setting"?"nav active":"nav"} onClick={()=>setMenu("setting")}><Icon type="gear"/>Pengaturan</button><div className="safe"><b>● Mode aman</b><span>Nilai tidak disimpan di Local Storage.</span></div><small className="ver">AL-GHOZALI WEB • UI v2.0</small></aside>
  <section className="content"><div className="heading"><div><span>Beranda / {({input:"Input Nilai",rekap:"Rekap Nilai",raport:"Raport Web",master:"Master Data",setting:"Pengaturan"})[menu]}</span><h2>{({input:"Input Nilai Siswa",rekap:"Rekap Nilai",raport:"Raport Web",master:"Master Data",setting:"Pengaturan"})[menu]}</h2><p>Panel hanya menampilkan fungsi yang sedang dipilih.</p></div><div className="actions">{menu==="raport"&&<button className="outline" onClick={()=>window.print()}>⤓ Cetak PDF</button>}{menu==="input"&&<button className="primary compact" onClick={()=>setSaved(true)}>✓ Simpan Nilai</button>}</div></div>
  {menu==="input"&&<>
  <div className="module-card">
   <div className="module-title"><div><span className="module-kicker">INPUT NILAI</span><h3>Pilih konteks penilaian</h3><p>Filter tampil di dalam panel ini dan tidak memenuhi halaman ketika fungsi lain dipilih.</p></div></div>
-  <div className="filter-grid"><label>Tahun Ajaran<select><option>2026/2027 — Ganjil</option></select></label><label>Jenjang<select value={unit} onChange={e=>setUnit(e.target.value)}><option>SMP</option><option>SMA</option><option>TMMIA</option></select></label><label>Kelas<select value={klass} onChange={e=>setKlass(e.target.value)}><option>1 - A</option><option>1 - B</option><option>2 - A</option><option>3 - A</option></select></label><label>Mata Pelajaran<select value={subject} onChange={e=>setSubject(e.target.value)}>{subjects.map(s=><option key={s[0]}>{s[0]}</option>)}</select></label></div>
+  <div className="filter-grid"><label>Tahun Ajaran<select><option>2026/2027 — Ganjil</option></select></label><label>Jenjang<select value={unit} onChange={e=>setUnit(e.target.value)}>{(units.length?units:["SMP","SMA","TMMIA"]).map(x=><option key={x}>{x}</option>)}</select></label><label>Kelas<select value={klass} onChange={e=>setKlass(e.target.value)}>{(classes.length?classes:["1 - A","1 - B","2 - A","3 - A"]).map(x=><option key={x}>{x}</option>)}</select></label><label>Mata Pelajaran<select value={subject} onChange={e=>setSubject(e.target.value)}>{availableSubjects.map(x=><option key={x}>{x}</option>)}</select></label></div>
  </div>
- <section className="card module-card"><div className="card-head"><div><h3>Input Nilai</h3><p>{subject} • {klass} • {unit}</p></div><span className="pill">{saved?"Tersimpan (demo)":"Belum disimpan"}</span></div><div className="table-scroll"><table><thead><tr><th>No</th><th>NISN</th><th>Nama Siswa</th><th>Kelas</th><th>Nilai</th><th>Predikat</th></tr></thead><tbody>{students.map((s,i)=>{let v=i===0?(grades[subject]??""):[86,88,90,84][i-1];return <tr className={i===student?"selected":""} key={s[1]}><td>{i+1}</td><td>{s[1]}</td><td><button className="student" onClick={()=>setStudent(i)}>{s[0]}</button></td><td>{klass}</td><td><input value={v} disabled={i!==0} onChange={e=>setGrade(e.target.value)}/></td><td><em className={"badge "+pred(v).toLowerCase()}>{pred(v)}</em></td></tr>})}</tbody></table></div><div className="foot">Menampilkan 5 siswa • demo UI <button>Lihat semua siswa →</button></div></section>
+ <section className="card module-card"><div className="card-head"><div><h3>Input Nilai</h3><p>{subject} • {klass} • {unit}</p></div><span className="pill">{saved?"Tersimpan (demo)":"Belum disimpan"}</span></div><div className="table-scroll"><table><thead><tr><th>No</th><th>NISN</th><th>Nama Siswa</th><th>Kelas</th><th>Nilai</th><th>Predikat</th></tr></thead><tbody>{effectiveStudents.slice(0,50).map((s,i)=>{const name=s.namaSiswa||s.NAMA_SISWA||s.nama||s[0];const nisn=s.nisn||s.NISN||s[1];const cls=s.kelas||s.KELAS||klass;let v=i===0?(grades[subject]??""):[86,88,90,84][i-1];return <tr className={i===student?"selected":""} key={nisn||i}><td>{i+1}</td><td>{nisn}</td><td><button className="student" onClick={()=>setStudent(i)}>{name}</button></td><td>{cls}</td><td><input value={v} disabled={i!==0} onChange={e=>setGrade(e.target.value)}/></td><td><em className={"badge "+pred(v).toLowerCase()}>{pred(v)}</em></td></tr>})}</tbody></table></div><div className="foot">Menampilkan {effectiveStudents.length||5} siswa • data dari Apps Script {apiError&&<span className="error">{apiError}</span>} </div></section>
  </>}
  {menu==="rekap"&&<section className="card module-card"><div className="card-head"><div><h3>Rekap Nilai</h3><p>Ringkasan progres input berdasarkan data yang nanti berasal dari Apps Script.</p></div></div><div className="stats compact-stats">{[["617","Jumlah Siswa","Siswa aktif","green"],["124","Jumlah Guru","Guru aktif","gold"],["63","Jumlah Mapel","Mata pelajaran","blue"],["84%","Input Hari Ini","Progress nilai","purple"]].map(x=><div className="stat" key={x[1]}><i className={x[3]}>{x[0]==="84%"?"✓":"◆"}</i><div><span>{x[1]}</span><b>{x[0]}</b><small>{x[2]}</small></div></div>)}</div><div className="table-scroll"><table><thead><tr><th>Jenjang</th><th>Kelas</th><th>Mata Pelajaran</th><th>Guru</th><th>Status</th></tr></thead><tbody><tr><td>SMP</td><td>{klass}</td><td>{subject}</td><td>Belum terhubung</td><td><em className="badge b">Menunggu Apps Script</em></td></tr></tbody></table></div></section>}
  {menu==="raport"&&<aside className="card preview module-card"><div className="card-head"><div><h3>Preview Raport</h3><p>Render web • bukan tampilan Excel</p></div><button className="tiny" onClick={()=>window.print()}>Cetak</button></div><article className="report"><div className="rhead"><img src={LOGO} alt="Logo"/><div><h1>كشف الدرجات</h1><p>للامتحان التّحريري لمنتصف الفصل الدّراسي الأوّل</p></div><img src={LOGO} alt="Logo"/></div><div className="identity"><span><b>الاسم كامل :</b> {current[0]}</span><span><b>الصّفّ :</b> {klass==="1 - A"?"الأوّل - A":klass==="1 - B"?"الأوّل - B":klass==="2 - A"?"الثّاني - A":klass==="3 - A"?"الثّالث - A":klass}</span><span><b>الرقم :</b> {current[1]}</span><span><b>العام الدّراسي :</b> ٢۰۲٧ / ٢۰۲٦</span></div><table className="report-table"><thead><tr><th colSpan="3">الدّرجة الّتي حصلت عليها الطالب / الطالبة</th><th>Mata Pelajaran</th><th>المواد الدّراسيّة</th><th className="report-no-head">الرقم</th></tr></thead><tbody>{subjects.map((s,i)=>{let v=Number(grades[s[0]]);let value=Number.isFinite(v)?v:0;return <tr key={s[0]}><td className="grade-word">{arabicNumberWord(value)}</td><td className="grade-western">{Number.isFinite(v)?v:""}</td><td className="grade-arabic">{Number.isFinite(v)?toArabicDigits(v):""}</td><td className="subject-id">{s[0]}</td><td className="subject-ar" dir="rtl">{s[1]}</td><td className="arabic-no">{toArabicDigits(i+1)}</td></tr>})}<tr className="sum"><td></td><td>{nums.length?total:""}</td><td>{nums.length?toArabicDigits(total):""}</td><td>Jumlah</td><td dir="rtl">المجـموع</td><td></td></tr><tr className="sum"><td></td><td>{nums.length?avg.toFixed(2):""}</td><td>{nums.length?toArabicDigits(avg.toFixed(2)):""}</td><td>Nilai Rata Rata</td><td dir="rtl">النتيجـة المـعدّلة</td><td></td></tr><tr className="sum"><td>الأول</td><td>1</td><td>١</td><td>Peringkat</td><td dir="rtl">المقام</td><td></td></tr></tbody></table><div className="date">تحريرا بغونونج سندور، ۱۰ اكتوبار ٢۰۲٦/ ٢٧ ربيع الآخر ۱٤٤۸</div><div className="sign"><div><b>ولي الأمر</b><span className="sign-line"></span><small>________________</small></div><div><b>ولي الفصل</b><span className="sign-line"></span><small>Amalia Nur Fariha, S.Pd</small></div><div><b>مـدير المـعهد</b><span className="sign-line"></span><small>M. Ya'qub Unang, S.Ag</small></div></div></article></aside>}
