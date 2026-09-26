@@ -1,201 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-const demoStudents = [
-  { id: "s1", name: "Pilih Siswa", nisn: "", className: "4A", unit: "SMA" },
-  { id: "s2", name: "Contoh Siswa 1", nisn: "0012345678", className: "4A", unit: "SMA" },
-  { id: "s3", name: "Contoh Siswa 2", nisn: "0012345679", className: "4A", unit: "SMA" }
+const LOGO="https://raw.githubusercontent.com/smaislamalghozali103-byte/raport_pondok_integrasi/main/public/assets/logo-ypi-al-ghozali.png";
+const subjects=[
+["Tamrin Lughoh","تمرين اللغة"],["Mutholaah","المطالعة"],["Aqidah","العقيدة"],["Hadist","الحديث"],["Fiqih","الفقه"],
+["Tarikh Islam","التاريخ الإسلامي"],["Tajwid","التجويد"],["Imla","الإملاء"],["Khot","الخط"],["Mahfudzot","المحفوظات"],
+["Pendidikan Agama Islam","التربية الدينية الإسلامية"],["Bahasa Indonesia","اللغة الإندونيسية"],["Bahasa Inggris","اللغة الإنجليزية"],
+["Matematika","الرياضيات"],["Ilmu Pengetahuan Alam","علم الطبيعة"],["Ilmu Pengetahuan Sosial","علم الاجتماع"],
+["Pendidikan Kewarganegaraan","التربية الوطنية"],["Informatika","علم الحاسوب"],["Pendidikan Jasmani dan Kesehatan","الرياضة البدنية والصحية"],
+["Seni Budaya","الفنون الجميلة"],["Bahasa Sunda","اللغة السوندية"]
 ];
-
-const subjects = [
-  ["Tamrin Lughoh", "تمرين اللغة"],
-  ["Mutholaah", "المطالعة"],
-  ["Aqidah", "العقيدة"],
-  ["Hadist", "الحديث"],
-  ["Fiqih", "الفقه"],
-  ["Tarikh Islam", "التاريخ الإسلامي"],
-  ["Tajwid", "التجويد"],
-  ["Imla", "الإملاء"],
-  ["Khot", "الخط"],
-  ["Mahfudzot", "المحفوظات"],
-  ["Pendidikan Agama Islam", "التربية الدينية الإسلامية"],
-  ["Bahasa Indonesia", "اللغة الإندونيسية"],
-  ["Bahasa Inggris", "اللغة الإنجليزية"],
-  ["Matematika", "الرياضيات"],
-  ["Ilmu Pengetahuan Alam", "علم الطبيعة"],
-  ["Ilmu Pengetahuan Sosial", "علم الاجتماع"],
-  ["Pendidikan Kewarganegaraan", "التربية الوطنية"],
-  ["Informatika", "علم الحاسوب"],
-  ["Pendidikan Jasmani dan Kesehatan", "الرياضة البدنية والصحية"],
-  ["Seni Budaya", "الفنون الجميلة"],
-  ["Bahasa Sunda", "اللغة السوندية"]
+const students=[
+["AANISAH CELYANI","3148999544"],["ABDILLAH RAHMAN","3148999545"],["AHMAD FAHRI","3148999546"],
+["ALI ZAINUDDIN","3148999547"],["AMIRUL HAKIM","3148999548"]
 ];
+const initial={Matematika:88,Fiqih:90,"Bahasa Indonesia":87,Aqidah:92,Tajwid:84,"Bahasa Inggris":86};
 
-function emptyGrades() {
-  return Object.fromEntries(subjects.map(([name]) => [name, ""]));
-}
+function pred(v){const n=Number(v);return Number.isFinite(n)?n>=90?"A":n>=80?"B":n>=70?"C":"D":"—"}
+function Icon({type}){const p={home:"M3 10 12 3l9 7M5 9v12h14V9M9 21v-6h6v6",edit:"M4 20h4L19 9l-4-4L4 16v4M13 6l4 4",chart:"M5 20V10M12 20V4M19 20v-7",file:"M6 3h8l4 4v14H6zM14 3v5h5M9 13h6M9 17h6",users:"M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M16 3a4 4 0 0 1 0 8M21 21v-2a4 4 0 0 0-3-4",gear:"M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM19 13a7 7 0 0 0 0-2l2-1-2-3-2 1a7 7 0 0 0-2-1l-.5-2h-3L11 7a7 7 0 0 0-2 1L7 7 5 10l2 1a7 7 0 0 0 0 2l-2 1 2 3 2-1a7 7 0 0 0 2 1l.5 2h3l.5-2a7 7 0 0 0 2-1l2 1 2-3-2-1Z",logout:"M10 17l5-5-5-5M15 12H3M21 19V5a2 2 0 0 0-2-2h-7"}[type];return <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={p}/></svg>}
 
-function gradeLetter(n) {
-  if (!Number.isFinite(n)) return "";
-  if (n >= 90) return "A";
-  if (n >= 80) return "B";
-  if (n >= 70) return "C";
-  return "D";
-}
+export default function Home(){
+ const [login,setLogin]=useState(false),[user,setUser]=useState(""),[pin,setPin]=useState(""),[err,setErr]=useState("");
+ const [menu,setMenu]=useState("input"),[unit,setUnit]=useState("SMP"),[klass,setKlass]=useState("1 - A"),[subject,setSubject]=useState("Tamrin Lughoh"),[student,setStudent]=useState(0),[grades,setGrades]=useState(initial),[saved,setSaved]=useState(false);
+ const current=students[student]; const nums=useMemo(()=>Object.values(grades).map(Number).filter(Number.isFinite),[grades]); const total=nums.reduce((a,b)=>a+b,0),avg=nums.length?total/nums.length:0;
+ const submit=e=>{e.preventDefault();if(user.trim()&&/^\d{6,}$/.test(pin)){setLogin(true);setErr("")}else setErr("Username wajib diisi dan PIN minimal 6 digit.")};
+ const setGrade=v=>{if(v===""||(/^\d{0,3}$/.test(v)&&Number(v)<=100)){setGrades(g=>({...g,[subject]:v}));setSaved(false)}};
 
-export default function Home() {
-  const [className, setClassName] = useState("4A");
-  const [unit, setUnit] = useState("SMA");
-  const [studentId, setStudentId] = useState("s2");
-  const [grades, setGrades] = useState(() => ({ ...emptyGrades(), Matematika: 88, Fiqih: 90, "Bahasa Indonesia": 87 }));
-  const [role, setRole] = useState("Wali Kelas");
+ if(!login)return <main className="login-page"><div className="orb a"/><div className="orb b"/><section className="login-card">
+   <div className="login-brand"><img src={LOGO} alt="Logo resmi YPI Al-Ghozali"/><span className="eyebrow">SISTEM RAPORT DIGITAL</span><h1>Pondok Modern<br/><b>Al-Ghozali</b></h1><p>Platform pengelolaan nilai dan raport dengan antarmuka modern, elegan, responsif, dan siap dihubungkan ke Google Spreadsheet + Apps Script.</p><div className="feature-row"><span>✓ Input Nilai</span><span>✓ Raport Web</span><span>✓ Cetak A4</span></div></div>
+   <form className="login-form" onSubmit={submit}><div><h2>Selamat datang</h2><p>Silakan masuk untuk melanjutkan.</p></div><label>Username<input value={user} onChange={e=>setUser(e.target.value)} placeholder="Username"/></label><label>PIN<input value={pin} onChange={e=>setPin(e.target.value.replace(/\D/g,""))} type="password" inputMode="numeric" maxLength={12} placeholder="Minimal 6 digit"/></label>{err&&<div className="error">{err}</div>}<button className="primary" type="submit"><Icon type="logout"/> Masuk</button><button className="demo" type="button" onClick={()=>{setUser("Demo Admin");setLogin(true)}}>Lihat Demo Dashboard</button><small>TA 2026/2027 • PTS Ganjil</small></form>
+ </section><footer>© 2026 Pondok Modern Al-Ghozali</footer></main>;
 
-  const student = demoStudents.find(s => s.id === studentId) || demoStudents[1];
-  const numericGrades = Object.values(grades).map(Number).filter(Number.isFinite);
-  const total = numericGrades.reduce((a,b) => a+b, 0);
-  const average = numericGrades.length ? total / numericGrades.length : 0;
-
-  function update(name, value) {
-    if (value === "" || (/^\d{0,3}(\.\d{0,2})?$/.test(value) && Number(value) <= 100)) {
-      setGrades(prev => ({ ...prev, [name]: value }));
-    }
-  }
-
-  return (
-    <main className="app-shell">
-      <section className="toolbar">
-        <div className="brand">
-          <img src="/assets/logo-ypi-al-ghozali.png" alt="Logo YPI Al-Ghozali" />
-          <div>
-            <strong>RAPORT PONDOK MODERN AL-GHOZALI</strong>
-            <span>Web App • tampilan raport dibuat langsung di aplikasi</span>
-          </div>
-        </div>
-        <div className="toolbar-actions">
-          <select value={unit} onChange={e => setUnit(e.target.value)}>
-            <option>SMP</option>
-            <option>SMA</option>
-            <option>TMMIA</option>
-          </select>
-          <select value={className} onChange={e => setClassName(e.target.value)}>
-            <option>1 SMP</option>
-            <option>2 SMP</option>
-            <option>3 SMP</option>
-            <option>1 INT</option>
-            <option>2 INT</option>
-            <option>3 INT</option>
-            <option>4A</option>
-            <option>5A</option>
-            <option>6A</option>
-          </select>
-          <select value={studentId} onChange={e => setStudentId(e.target.value)}>
-            {demoStudents.slice(1).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-          <button onClick={() => window.print()}>🖨️ Cetak</button>
-        </div>
-      </section>
-
-      <section className="workspace">
-        <aside className="panel">
-          <div className="panel-title">INPUT NILAI</div>
-          <p>Versi awal untuk menguji bentuk web. Nilai pada sisi kiri akan langsung tercermin pada raport.</p>
-
-          <div className="field">
-            <label>Peran</label>
-            <select value={role} onChange={e => setRole(e.target.value)}>
-              <option>Guru</option>
-              <option>Wali Kelas</option>
-              <option>Admin</option>
-            </select>
-          </div>
-
-          <div className="field">
-            <label>Nama Siswa</label>
-            <input value={student.name} readOnly />
-          </div>
-
-          <div className="field-grid">
-            {subjects.map(([name]) => (
-              <label key={name}>
-                <span>{name}</span>
-                <input
-                  inputMode="decimal"
-                  value={grades[name]}
-                  onChange={e => update(name, e.target.value)}
-                  placeholder="0-100"
-                />
-              </label>
-            ))}
-          </div>
-        </aside>
-
-        <section className="preview-area">
-          <div className="preview-note">
-            <strong>RAPORT WEB</strong>
-            <span>Excel/Spreadsheet menjadi basis data di belakang sistem. Yang tampil di sini hanya desain raport web.</span>
-          </div>
-
-          <article className="report-page">
-            <div className="outer-red" />
-            <div className="ornament-frame" />
-            <div className="report-content">
-              <header className="report-header">
-                <img src="/assets/logo-ypi-al-ghozali.png" alt="Logo kiri" />
-                <div>
-                  <h1>كشف الدرجات</h1>
-                  <h2>للامتحان التّحريري لمنتصف الفصل الدّراسي الأوّل</h2>
-                </div>
-                <img src="/assets/logo-ypi-al-ghozali.png" alt="Logo kanan" />
-              </header>
-
-              <div className="identity-grid">
-                <div><span>الاسم كامل :</span><b>{student.name}</b></div>
-                <div><span>الصّفّ :</span><b>{className}</b></div>
-                <div><span>الرقم :</span><b>{student.nisn}</b></div>
-                <div><span>العام الدّراسي :</span><b>2026/2027</b></div>
-              </div>
-
-              <table className="report-table">
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th className="arabic">المواد الدّراسيّة</th>
-                    <th>Mata Pelajaran</th>
-                    <th>Nilai</th>
-                    <th>Predikat</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {subjects.map(([name, arabic], i) => {
-                    const n = Number(grades[name]);
-                    return (
-                      <tr key={name}>
-                        <td>{i+1}</td>
-                        <td className="arabic">{arabic}</td>
-                        <td>{name}</td>
-                        <td>{Number.isFinite(n) ? n : ""}</td>
-                        <td>{gradeLetter(n)}</td>
-                      </tr>
-                    );
-                  })}
-                  <tr className="summary-row"><td colSpan="3">المجـموع / Jumlah</td><td>{numericGrades.length ? total : ""}</td><td /></tr>
-                  <tr className="summary-row"><td colSpan="3">النّتيجـة المـعدّلة / Nilai Rata-Rata</td><td>{numericGrades.length ? average.toFixed(2) : ""}</td><td /></tr>
-                  <tr className="summary-row"><td colSpan="3">المقـام / Peringkat</td><td>—</td><td /></tr>
-                </tbody>
-              </table>
-
-              <div className="report-date">تحريراً بغونونج سندور، 10 اكتوبر 2026</div>
-
-              <div className="signature-grid">
-                <div className="signature"><strong>ولي الأمر</strong><div className="signature-space" /><div className="signature-line" /></div>
-                <div className="signature"><strong>ولي الفصل</strong><div className="signature-space seal"><span>STAMP</span></div><div className="signature-line" /><b>________________</b></div>
-                <div className="signature"><strong>مـدير المـعهد</strong><div className="signature-space" /><div className="signature-line" /><b>M. Ya'qub Unang, S.Ag</b></div>
-              </div>
-            </div>
-          </article>
-        </section>
-      </section>
-    </main>
-  );
+ return <main className="shell"><header className="topbar"><div className="brand"><img src={LOGO} alt="Logo YPI Al-Ghozali"/><div><b>RAPORT PONDOK MODERN AL-GHOZALI</b><span>TA 2026/2027 • PTS GANJIL</span></div></div><div className="account"><div className="avatar">AG</div><div><b>{user||"Demo Admin"}</b><span>Administrator</span></div><button onClick={()=>setLogin(false)}>Keluar</button></div></header>
+ <div className="layout"><aside className="sidebar"><span className="menu-title">MENU UTAMA</span>{[["input","Input Nilai","edit"],["rekap","Rekap Nilai","chart"],["raport","Raport Web","file"],["master","Master Data","users"]].map(x=><button key={x[0]} className={menu===x[0]?"nav active":"nav"} onClick={()=>setMenu(x[0])}><Icon type={x[2]}/>{x[1]}</button>)}<span className="menu-title mt">SISTEM</span><button className={menu==="setting"?"nav active":"nav"} onClick={()=>setMenu("setting")}><Icon type="gear"/>Pengaturan</button><div className="safe"><b>● Mode aman</b><span>Nilai tidak disimpan di Local Storage.</span></div><small className="ver">AL-GHOZALI WEB • UI v2.0</small></aside>
+ <section className="content"><div className="heading"><div><span>Beranda / {menu==="input"?"Input Nilai":"Dashboard"}</span><h2>{menu==="input"?"Input Nilai Siswa":"Dashboard Raport"}</h2><p>Kelola data dengan alur terkontrol dan tampilan yang bersih.</p></div><div className="actions"><button className="outline" onClick={()=>window.print()}>⤓ Cetak PDF</button><button className="primary compact" onClick={()=>setSaved(true)}>✓ Simpan Nilai</button></div></div>
+ <div className="stats">{[["617","Jumlah Siswa","Siswa aktif","green"],["124","Jumlah Guru","Guru aktif","gold"],["63","Jumlah Mapel","Mata pelajaran","blue"],["84%","Input Hari Ini","Progress nilai","purple"]].map(x=><div className="stat" key={x[1]}><i className={x[3]}>{x[0]==="84%"?"✓":"◆"}</i><div><span>{x[1]}</span><b>{x[0]}</b><small>{x[2]}</small></div></div>)}</div>
+ <div className="filters"><div className="filter-head"><b>Filter & konteks data</b><span>Master akan mengikuti penugasan pengguna setelah Apps Script dihubungkan.</span></div><div className="filter-grid"><label>Tahun Ajaran<select><option>2026/2027 — Ganjil</option></select></label><label>Jenjang<select value={unit} onChange={e=>setUnit(e.target.value)}><option>SMP</option><option>SMA</option><option>TMMIA</option></select></label><label>Kelas<select value={klass} onChange={e=>setKlass(e.target.value)}><option>1 - A</option><option>1 - B</option><option>2 - A</option><option>3 - A</option></select></label><label>Mata Pelajaran<select value={subject} onChange={e=>setSubject(e.target.value)}>{subjects.map(s=><option key={s[0]}>{s[0]}</option>)}</select></label></div></div>
+ <div className="grid"><section className="card"><div className="card-head"><div><h3>Input Nilai</h3><p>{subject} • {klass} • {unit}</p></div><span className="pill">{saved?"Tersimpan (demo)":"Belum disimpan"}</span></div><div className="table-scroll"><table><thead><tr><th>No</th><th>NISN</th><th>Nama Siswa</th><th>Kelas</th><th>Nilai</th><th>Predikat</th></tr></thead><tbody>{students.map((s,i)=>{let v=i===0?(grades[subject]??""):[86,88,90,84][i-1];return <tr className={i===student?"selected":""} key={s[1]}><td>{i+1}</td><td>{s[1]}</td><td><button className="student" onClick={()=>setStudent(i)}>{s[0]}</button></td><td>{klass}</td><td><input value={v} disabled={i!==0} onChange={e=>setGrade(e.target.value)}/></td><td><em className={"badge "+pred(v).toLowerCase()}>{pred(v)}</em></td></tr>})}</tbody></table></div><div className="foot">Menampilkan 5 siswa • demo UI <button>Lihat semua siswa →</button></div></section>
+ <aside className="card preview"><div className="card-head"><div><h3>Preview Raport</h3><p>Render web • bukan tampilan Excel</p></div><button className="tiny" onClick={()=>window.print()}>Cetak</button></div><article className="report"><div className="rhead"><img src={LOGO} alt="Logo"/><div><h1>كشف الدرجات</h1><p>للامتحان التّحريري لمنتصف الفصل الدّراسي</p></div><img src={LOGO} alt="Logo"/></div><div className="identity"><span>الاسم : <b>{current[0]}</b></span><span>الصّفّ : <b>{klass}</b></span><span>الرقم : <b>{current[1]}</b></span><span>العام الدّراسي : <b>2026/2027</b></span></div><table className="report-table"><thead><tr><th>No</th><th>المواد الدّراسيّة</th><th>Mata Pelajaran</th><th>Nilai</th><th>Predikat</th></tr></thead><tbody>{subjects.map((s,i)=>{let v=Number(grades[s[0]]);return <tr key={s[0]}><td>{i+1}</td><td dir="rtl">{s[1]}</td><td>{s[0]}</td><td>{Number.isFinite(v)?v:""}</td><td>{pred(v)}</td></tr>})}<tr className="sum"><td colSpan="3">Jumlah / المجموع</td><td>{nums.length?total:""}</td><td/></tr><tr className="sum"><td colSpan="3">Nilai Rata-Rata / النتيجة</td><td>{nums.length?avg.toFixed(2):""}</td><td/></tr></tbody></table><div className="date">تحريراً بغونونج سندور، 10 اكتوبر 2026</div><div className="sign"><span>ولي الأمر</span><span>ولي الفصل</span><span>مـدير المـعهد</span></div></article></aside></div></section></div></main>;
 }
