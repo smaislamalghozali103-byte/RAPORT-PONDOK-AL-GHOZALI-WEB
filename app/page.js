@@ -123,7 +123,7 @@ function Icon({type}){const p={home:"M3 10 12 3l9 7M5 9v12h14V9M9 21v-6h6v6",edi
 
 export default function Home(){
  const [session,setSession]=useState(null),[login,setLogin]=useState(false),[user,setUser]=useState(""),[pin,setPin]=useState(""),[err,setErr]=useState(""),[loading,setLoading]=useState(false);
- const [role,setRole]=useState(""),[profile,setProfile]=useState(null),[studentsData,setStudentsData]=useState([]),[assignments,setAssignments]=useState([]),[subjectsData,setSubjectsData]=useState([]),[classesData,setClassesData]=useState([]),[apiError,setApiError]=useState(""),[gradeError,setGradeError]=useState(""),[saving,setSaving]=useState(false);
+ const [role,setRole]=useState(""),[profile,setProfile]=useState(null),[studentsData,setStudentsData]=useState([]),[assignments,setAssignments]=useState([]),[subjectsData,setSubjectsData]=useState([]),[classesData,setClassesData]=useState([]),[curriculumData,setCurriculumData]=useState([]),[apiError,setApiError]=useState(""),[gradeError,setGradeError]=useState(""),[saving,setSaving]=useState(false);
 
  const [menu,setMenu]=useState("input"),[unit,setUnit]=useState(""),[klass,setKlass]=useState(""),[subject,setSubject]=useState(""),[student,setStudent]=useState(0),[grades,setGrades]=useState(initial),[saved,setSaved]=useState(false);
  const [gradeRows,setGradeRows]=useState([]);
@@ -131,8 +131,9 @@ export default function Home(){
  const effectiveAssignments=assignments||[];
  const units=["SMP","SMA","TMMIA"];
  const classes=[...new Set([
-   ...classesData.filter(k=>!unit||k.unit===unit).map(k=>k.kelas),
-   ...effectiveStudents.filter(s=>!unit||s.unit===unit).map(s=>s.kelas)
+   ...(unit==="TMMIA"
+     ? [...classesData.map(k=>k.kelas),...effectiveStudents.map(s=>s.kelas)].filter(k=>mukimGroupForClass(k))
+     : [...classesData.filter(k=>!unit||k.unit===unit).map(k=>k.kelas),...effectiveStudents.filter(s=>!unit||s.unit===unit).map(s=>s.kelas)])
  ].filter(Boolean))];
  const subjectCatalog=useMemo(()=>{
    const byKey=new Map();
@@ -154,11 +155,16 @@ export default function Home(){
    });
    return [...byKey.values()];
  },[effectiveAssignments,subjectsData]);
- const availableSubjects=useMemo(()=>{ 
+ const availableSubjects=useMemo(()=>{
    if(!unit) return [];
-   const source=subjectCatalog.filter(x=>String(x.unit||"").trim().toUpperCase()===unit);
-   return [...new Set(source.map(x=>x.displayName).filter(Boolean))];
- },[subjectCatalog,unit]);
+   if(unit==="TMMIA"){
+     const group=mukimGroupForClass(klass);
+     if(!group) return [];
+     const ids=new Set(curriculumData.filter(c=>c.group===group).map(c=>String(c.mapelId||"")).filter(Boolean));
+     return [...new Set(subjectCatalog.filter(x=>String(x.unit||"").trim().toUpperCase()==="TMMIA"&&ids.has(String(x.mapelId||""))).map(x=>x.displayName).filter(Boolean))];
+   }
+   return [...new Set(subjectCatalog.filter(x=>String(x.unit||"").trim().toUpperCase()===unit).map(x=>x.displayName).filter(Boolean))];
+ },[subjectCatalog,unit,klass,curriculumData]);
 
  useEffect(()=>{
    if(unit && !classes.includes(klass)) setKlass(classes[0]||"");
@@ -264,13 +270,15 @@ export default function Home(){
      api("students",{},token),
      api("assignments",{},token),
      api("subjects",{},token),
-     api("classes",{},token)
+     api("classes",{},token),
+     api("curriculum",{},token)
    ]);
    const errors=[];
    const stu=results[0].status==="fulfilled"?arrayFromResponse(results[0].value,"students","data","rows"):null;
    const ass=results[1].status==="fulfilled"?arrayFromResponse(results[1].value,"assignments","data","rows"):null;
    const sub=results[2].status==="fulfilled"?arrayFromResponse(results[2].value,"subjects","data","rows"):null;
    const cls=results[3].status==="fulfilled"?arrayFromResponse(results[3].value,"classes","data","rows"):null;
+   const cur=results[4].status==="fulfilled"?arrayFromResponse(results[4].value,"curriculum","data","rows"):null;
    if(stu!==null) setStudentsData(stu.map(normalizeStudent).filter(s=>s.studentId||s.nisn||s.namaSiswa));
    else errors.push("MASTER SISWA: "+results[0].reason.message);
    if(ass!==null) setAssignments(ass.map(normalizeAssignment).filter(a=>a.mataPelajaran||a.mapelId));
@@ -279,6 +287,8 @@ export default function Home(){
    else errors.push("MASTER MAPEL: "+results[2].reason.message);
    if(cls!==null) setClassesData(cls.map(normalizeClass).filter(k=>k.kelas));
    else errors.push("MASTER KELAS: "+results[3].reason.message);
+   if(cur!==null) setCurriculumData(cur.map(normalizeCurriculum).filter(c=>c.group&&c.mapelId));
+   else errors.push("KURIKULUM: "+results[4].reason.message);
    if(errors.length) setApiError(errors.join(" | "));
  };
  const submit=async e=>{e.preventDefault();setErr("");if(!user.trim()||!/^\d{6,}$/.test(pin)){setErr("Username wajib diisi dan PIN minimal 6 digit.");return}
