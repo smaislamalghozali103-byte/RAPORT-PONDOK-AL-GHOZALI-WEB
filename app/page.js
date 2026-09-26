@@ -33,12 +33,39 @@ function normalizeStudent(s){
   return {studentId:pick(s,"studentId","STUDENT_ID","id","ID"),nisn:pick(s,"nisn","NISN"),namaSiswa:pick(s,"namaSiswa","NAMA_SISWA","nama","NAMA"),unit:pick(s,"unit","UNIT"),kelas:pick(s,"kelas","KELAS","namaKelas","NAMA_KELAS")}
 }
 function normalizeAssignment(a){
-  if(Array.isArray(a)) return {unit:a[0]||"",kelas:a[1]||"",mataPelajaran:a[2]||"",mapelId:a[3]||"",guruId:a[4]||"",kodeMapel:a[5]||""}
-  return {unit:pick(a,"unit","UNIT"),kelas:pick(a,"kelas","KELAS","namaKelas","NAMA_KELAS"),mataPelajaran:pick(a,"mataPelajaran","MATA_PELAJARAN","namaMapel","NAMA_MAPEL","namaMapelRaport","NAMA_MAPEL_RAPORT"),mapelId:pick(a,"mapelId","MAPEL_ID","idMapel","ID_MAPEL"),guruId:pick(a,"guruId","ID_GURU","idGuru"),kodeMapel:pick(a,"kodeMapel","KODE_MAPEL","kode","KODE","Kode Mapel")}
+  if(Array.isArray(a)) return {
+    unit:a[0]||"", kelas:a[1]||"", mataPelajaran:a[2]||"",
+    mapelId:a[3]||"", guruId:a[4]||"", kodeMapel:a[5]||"",
+    namaMapelSumber:a[2]||"", namaMapelRaport:"", namaArabRaport:""
+  }
+  return {
+    unit:pick(a,"unit","UNIT"),
+    kelas:pick(a,"kelas","KELAS","namaKelas","NAMA_KELAS","kelasSumber","KELAS_SUMBER"),
+    mataPelajaran:pick(a,"mataPelajaran","MATA_PELAJARAN","namaMapelSumber","NAMA_MAPEL_SUMBER","namaMapel","NAMA_MAPEL"),
+    mapelId:pick(a,"mapelId","MAPEL_ID","idMapel","ID_MAPEL"),
+    guruId:pick(a,"guruId","ID_GURU","idGuru"),
+    kodeMapel:pick(a,"kodeMapel","KODE_MAPEL","kode","KODE","Kode Mapel"),
+    namaMapelSumber:pick(a,"namaMapelSumber","NAMA_MAPEL_SUMBER","mataPelajaran","MATA_PELAJARAN","namaMapel","NAMA_MAPEL"),
+    namaMapelRaport:pick(a,"namaMapelRaport","NAMA_MAPEL_RAPORT"),
+    namaArabRaport:pick(a,"namaArabRaport","NAMA_ARAB_RAPORT","namaArab","NAMA_ARAB")
+  }
 }
 function normalizeSubject(s){
-  if(Array.isArray(s)) return {mapelId:s[0]||"",namaMapel:s[1]||"",namaArab:s[2]||"",unit:s[3]||""}
-  return {mapelId:pick(s,"mapelId","MAPEL_ID","idMapel","ID_MAPEL"),namaMapel:pick(s,"namaMapel","NAMA_MAPEL","namaMapelRaport","NAMA_MAPEL_RAPORT","mataPelajaran","MATA_PELAJARAN"),namaArab:pick(s,"namaArab","NAMA_ARAB","namaArabRaport","NAMA_ARAB_RAPORT"),unit:pick(s,"unit","UNIT")}
+  if(Array.isArray(s)) return {
+    mapelId:s[0]||"", kodeMapel:s[1]||"", namaMapel:s[2]||"",
+    namaMapelSumber:s[2]||"", namaMapelRaport:s[2]||"", namaArab:s[3]||"",
+    namaArabRaport:s[3]||"", unit:s[4]||""
+  }
+  return {
+    mapelId:pick(s,"mapelId","MAPEL_ID","idMapel","ID_MAPEL"),
+    kodeMapel:pick(s,"kodeMapel","KODE_MAPEL","kode","KODE"),
+    namaMapel:pick(s,"namaMapel","NAMA_MAPEL","namaMapelRaport","NAMA_MAPEL_RAPORT","mataPelajaran","MATA_PELAJARAN"),
+    namaMapelSumber:pick(s,"namaMapelSumber","NAMA_MAPEL_SUMBER","mataPelajaran","MATA_PELAJARAN","namaMapel","NAMA_MAPEL"),
+    namaMapelRaport:pick(s,"namaMapelRaport","NAMA_MAPEL_RAPORT","namaMapel","NAMA_MAPEL"),
+    namaArab:pick(s,"namaArab","NAMA_ARAB","namaArabRaport","NAMA_ARAB_RAPORT"),
+    namaArabRaport:pick(s,"namaArabRaport","NAMA_ARAB_RAPORT","namaArab","NAMA_ARAB"),
+    unit:pick(s,"unit","UNIT")
+  }
 }
 function normalizeClass(k){
   if(Array.isArray(k)) return {kelas:k[0]||"",unit:k[1]||""}
@@ -75,18 +102,43 @@ export default function Home(){
  const effectiveAssignments=assignments||[];
  const units=[...new Set([...effectiveStudents.map(s=>s.unit),...classesData.map(k=>k.unit)].filter(Boolean))];
  const classes=[...new Set([...classesData.map(k=>k.kelas),...effectiveStudents.map(s=>s.kelas)].filter(Boolean))];
- const assignedSubjects=[...new Set(effectiveAssignments.map(a=>a.mataPelajaran).filter(Boolean))];
- const masterSubjects=[...new Set(subjectsData.map(s=>s.namaMapel).filter(Boolean))];
- const availableSubjects=assignedSubjects.length?assignedSubjects:masterSubjects;
+ const subjectCatalog=useMemo(()=>{
+   const byKey=new Map();
+   const masterById=new Map(subjectsData.filter(s=>s.mapelId).map(s=>[String(s.mapelId),s]));
+   const masterByCode=new Map(subjectsData.filter(s=>s.kodeMapel).map(s=>[String(s.kodeMapel),s]));
+   effectiveAssignments.forEach(a=>{
+     const m=masterById.get(String(a.mapelId))||masterByCode.get(String(a.kodeMapel))||{};
+     const source=a.namaMapelSumber||a.mataPelajaran||m.namaMapelSumber||m.namaMapel||"";
+     const raport=a.namaMapelRaport||m.namaMapelRaport||m.namaMapel||source;
+     const arab=m.namaArabRaport||a.namaArabRaport||m.namaArab||"";
+     const key=String(a.mapelId||a.kodeMapel||source).trim();
+     if(!key) return;
+     if(!byKey.has(key)) byKey.set(key,{...a,mapelId:a.mapelId||m.mapelId||"",kodeMapel:a.kodeMapel||m.kodeMapel||"",namaMapelSumber:source,namaMapelRaport:raport,namaArabRaport:arab,displayName:source});
+   });
+   subjectsData.forEach(s=>{
+     const key=String(s.mapelId||s.kodeMapel||s.namaMapelRaport||s.namaMapel||"").trim();
+     if(!key || byKey.has(key)) return;
+     byKey.set(key,{mapelId:s.mapelId||"",kodeMapel:s.kodeMapel||"",unit:s.unit||"",namaMapelSumber:s.namaMapelSumber||s.namaMapel||"",namaMapelRaport:s.namaMapelRaport||s.namaMapel||"",namaArabRaport:s.namaArabRaport||s.namaArab||"",displayName:s.namaMapelSumber||s.namaMapel||""});
+   });
+   return [...byKey.values()];
+ },[effectiveAssignments,subjectsData]);
+ const availableSubjects=useMemo(()=>[...new Set(subjectCatalog.filter(x=>!x.unit||!unit||x.unit===unit).map(x=>x.displayName).filter(Boolean))],[subjectCatalog,unit]);
  const studentsForClass=effectiveStudents.filter(s=>(s.unit||s.UNIT||"")===unit && (s.kelas||s.KELAS||"")===klass);
- const selectedAssignment=effectiveAssignments.find(a=>{
-   const au=a.unit||a.UNIT||"";
-   const ac=a.kelas||a.KELAS||"";
-   const an=a.mataPelajaran||a.MATA_PELAJARAN||a.namaMapel||a.NAMA_MAPEL||"";
-   return au===unit && ac===klass && an===subject;
- });
- const mapelId=selectedAssignment?.mapelId||selectedAssignment?.MAPEL_ID||selectedAssignment?.idMapel||selectedAssignment?.ID_MAPEL||"";
- const kodeMapel=selectedAssignment?.kodeMapel||selectedAssignment?.KODE_MAPEL||selectedAssignment?.kode||selectedAssignment?.KODE||selectedAssignment?.["Kode Mapel"]||"";
+ const selectedAssignment=useMemo(()=>{
+   return subjectCatalog.find(a=>{
+     const au=a.unit||a.UNIT||"";
+     const ac=a.kelas||a.KELAS||"";
+     const an=a.displayName||a.namaMapelSumber||a.mataPelajaran||"";
+     return (!au||au===unit) && (!ac||ac===klass) && an===subject;
+   }) || subjectCatalog.find(a=>
+     (a.displayName||a.namaMapelSumber||"")===subject &&
+     (!a.unit||a.unit===unit)
+   ) || null;
+ },[subjectCatalog,unit,klass,subject]);
+ const mapelId=selectedAssignment?.mapelId||"";
+ const kodeMapel=selectedAssignment?.kodeMapel||"";
+ const reportMapelName=selectedAssignment?.namaMapelRaport||selectedAssignment?.displayName||subject||"";
+ const reportMapelArabic=selectedAssignment?.namaArabRaport||"";
  const selectedStudents=studentsForClass;
 
  const current=selectedStudents[student]||null;
@@ -251,11 +303,11 @@ export default function Home(){
  {menu==="input"&&<>
  <div className="module-card">
   <div className="module-title"><div><span className="module-kicker">INPUT NILAI</span><h3>Pilih konteks penilaian</h3><p>Filter tampil di dalam panel ini dan tidak memenuhi halaman ketika fungsi lain dipilih.</p></div></div>
-  <div className="filter-grid"><label>Tahun Ajaran<select><option>2026/2027 — Ganjil</option></select></label><label>Jenjang<select value={unit} onChange={e=>setUnit(e.target.value)}>{units.map(x=><option key={x}>{x}</option>)}</select></label><label>Kelas<select value={klass} onChange={e=>setKlass(e.target.value)}>{classes.map(x=><option key={x}>{x}</option>)}</select></label><label>Mata Pelajaran<select value={subject} onChange={e=>setSubject(e.target.value)}>{availableSubjects.map(x=><option key={x}>{x}</option>)}</select></label></div>
+  <div className="filter-grid"><label>Tahun Ajaran<select><option>2026/2027 — Ganjil</option></select></label><label>Jenjang<select value={unit} onChange={e=>setUnit(e.target.value)}>{units.map(x=><option key={x}>{x}</option>)}</select></label><label>Kelas<select value={klass} onChange={e=>setKlass(e.target.value)}>{classes.map(x=><option key={x}>{x}</option>)}</select></label><label>Mata Pelajaran<select value={subject} onChange={e=>setSubject(e.target.value)}>{availableSubjects.map(x=>{const meta=subjectCatalog.find(s=>s.displayName===x);return <option key={meta?.mapelId||meta?.kodeMapel||x} value={x}>{x}</option>})}</select></label></div>
  </div>
- <section className="card module-card"><div className="card-head"><div><h3>Input Nilai</h3><p>{subject} • {klass} • {unit}</p></div><span className="pill">{saving?"Menyimpan...":saved?"Tersimpan":"Belum disimpan"}</span></div><div className="table-scroll"><table><thead><tr><th>No</th><th>NISN</th><th>Nama Siswa</th><th>Kelas</th><th>Nilai</th><th>Predikat</th></tr></thead><tbody>{studentsForClass.slice(0,200).map((s,i)=>{const r=normalizeGradeRow(s,i);const v=grades[r.name]??r.value??"";return <tr className={i===student?"selected":""} key={r.studentId||r.nisn||i}><td>{i+1}</td><td>{r.nisn}</td><td><button className="student" onClick={()=>setStudent(i)}>{r.name}</button></td><td>{r.cls}</td><td><input value={v} inputMode="numeric" maxLength={3} placeholder="-" onChange={e=>setGrade(r.name,e.target.value)}/></td><td><em className={"badge "+pred(v).toLowerCase()}>{pred(v)}</em></td></tr>})}</tbody></table></div><div className="foot">Menampilkan {studentsForClass.length||0} siswa • Master Siswa/Mapel/Kelas/Penugasan dari Apps Script {gradeError&&<span className="error">{gradeError}</span>} {apiError&&<span className="error">{apiError}</span>} </div></section>
+ <section className="card module-card"><div className="card-head"><div><h3>Input Nilai</h3><p>Input: {subject||"—"} • Rekap/Raport: {reportMapelName||"—"} • {klass} • {unit}</p></div><span className="pill">{saving?"Menyimpan...":saved?"Tersimpan":"Belum disimpan"}</span></div><div className="table-scroll"><table><thead><tr><th>No</th><th>NISN</th><th>Nama Siswa</th><th>Kelas</th><th>Nilai</th><th>Predikat</th></tr></thead><tbody>{studentsForClass.slice(0,200).map((s,i)=>{const r=normalizeGradeRow(s,i);const v=grades[r.name]??r.value??"";return <tr className={i===student?"selected":""} key={r.studentId||r.nisn||i}><td>{i+1}</td><td>{r.nisn}</td><td><button className="student" onClick={()=>setStudent(i)}>{r.name}</button></td><td>{r.cls}</td><td><input value={v} inputMode="numeric" maxLength={3} placeholder="-" onChange={e=>setGrade(r.name,e.target.value)}/></td><td><em className={"badge "+pred(v).toLowerCase()}>{pred(v)}</em></td></tr>})}</tbody></table></div><div className="foot">Menampilkan {studentsForClass.length||0} siswa • Master Siswa/Mapel/Kelas/Penugasan dari Apps Script {gradeError&&<span className="error">{gradeError}</span>} {apiError&&<span className="error">{apiError}</span>} </div></section>
  </>}
- {menu==="rekap"&&<section className="card module-card"><div className="card-head"><div><h3>Rekap Nilai</h3><p>Ringkasan progres input berdasarkan data yang nanti berasal dari Apps Script.</p></div></div><div className="stats compact-stats">{[["617","Jumlah Siswa","Siswa aktif","green"],["124","Jumlah Guru","Guru aktif","gold"],["63","Jumlah Mapel","Mata pelajaran","blue"],["84%","Input Hari Ini","Progress nilai","purple"]].map(x=><div className="stat" key={x[1]}><i className={x[3]}>{x[0]==="84%"?"✓":"◆"}</i><div><span>{x[1]}</span><b>{x[0]}</b><small>{x[2]}</small></div></div>)}</div><div className="table-scroll"><table><thead><tr><th>Jenjang</th><th>Kelas</th><th>Mata Pelajaran</th><th>Guru</th><th>Status</th></tr></thead><tbody><tr><td>SMP</td><td>{klass}</td><td>{subject}</td><td>Belum terhubung</td><td><em className="badge b">Menunggu Apps Script</em></td></tr></tbody></table></div></section>}
+ {menu==="rekap"&&<section className="card module-card"><div className="card-head"><div><h3>Rekap Nilai</h3><p>Nama mapel rekap menggunakan <b>Nama Mapel Raport</b>, sedangkan Input Nilai menggunakan <b>Nama Mapel Sumber</b>. Keduanya terhubung melalui MAPEL_ID/KODE MAPEL.</p></div></div><div className="stats compact-stats">{[["617","Jumlah Siswa","Siswa aktif","green"],["124","Jumlah Guru","Guru aktif","gold"],["63","Jumlah Mapel","Mata pelajaran","blue"],["84%","Input Hari Ini","Progress nilai","purple"]].map(x=><div className="stat" key={x[1]}><i className={x[3]}>{x[0]==="84%"?"✓":"◆"}</i><div><span>{x[1]}</span><b>{x[0]}</b><small>{x[2]}</small></div></div>)}</div><div className="table-scroll"><table><thead><tr><th>Jenjang</th><th>Kelas</th><th>Mata Pelajaran</th><th>Guru</th><th>Status</th></tr></thead><tbody><tr><td>{unit||"—"}</td><td>{klass||"—"}</td><td>{reportMapelName||"—"}{reportMapelArabic&&<small className="mapel-arabic"> ({reportMapelArabic})</small>}</td><td>{profile?.namaGuru||profile?.name||user||"—"}</td><td><em className="badge b">{mapelId||kodeMapel?"Terhubung":"Belum terhubung"}</em></td></tr></tbody></table></div></section>}
  {menu==="raport"&&<aside className="card preview module-card"><div className="card-head"><div><h3>Preview Raport</h3><p>Render web • bukan tampilan Excel</p></div><button className="tiny" onClick={()=>window.print()}>Cetak</button></div><article className="report"><div className="rhead"><img src={LOGO} alt="Logo"/><div><h1>كشف الدرجات</h1><p>للامتحان التّحريري لمنتصف الفصل الدّراسي الأوّل</p></div><img src={LOGO} alt="Logo"/></div><div className="identity"><span><b>الاسم كامل :</b> {current[0]}</span><span><b>الصّفّ :</b> {klass==="1 - A"?"الأوّل - A":klass==="1 - B"?"الأوّل - B":klass==="2 - A"?"الثّاني - A":klass==="3 - A"?"الثّالث - A":klass}</span><span><b>الرقم :</b> {current[1]}</span><span><b>العام الدّراسي :</b> ٢۰۲٧ / ٢۰۲٦</span></div><table className="report-table"><thead><tr><th colSpan="3">الدّرجة الّتي حصلت عليها الطالب / الطالبة</th><th>Mata Pelajaran</th><th>المواد الدّراسيّة</th><th className="report-no-head">الرقم</th></tr></thead><tbody>{subjects.map((s,i)=>{let v=Number(grades[s[0]]);let value=Number.isFinite(v)?v:0;return <tr key={s[0]}><td className="grade-word">{arabicNumberWord(value)}</td><td className="grade-western">{Number.isFinite(v)?v:""}</td><td className="grade-arabic">{Number.isFinite(v)?toArabicDigits(v):""}</td><td className="subject-id">{s[0]}</td><td className="subject-ar" dir="rtl">{s[1]}</td><td className="arabic-no">{toArabicDigits(i+1)}</td></tr>})}<tr className="sum"><td></td><td>{nums.length?total:""}</td><td>{nums.length?toArabicDigits(total):""}</td><td>Jumlah</td><td dir="rtl">المجـموع</td><td></td></tr><tr className="sum"><td></td><td>{nums.length?avg.toFixed(2):""}</td><td>{nums.length?toArabicDigits(avg.toFixed(2)):""}</td><td>Nilai Rata Rata</td><td dir="rtl">النتيجـة المـعدّلة</td><td></td></tr><tr className="sum"><td>الأول</td><td>1</td><td>١</td><td>Peringkat</td><td dir="rtl">المقام</td><td></td></tr></tbody></table><div className="date">تحريرا بغونونج سندور، ۱۰ اكتوبار ٢۰۲٦/ ٢٧ ربيع الآخر ۱٤٤۸</div><div className="sign"><div><b>ولي الأمر</b><span className="sign-line"></span><small>________________</small></div><div><b>ولي الفصل</b><span className="sign-line"></span><small>Amalia Nur Fariha, S.Pd</small></div><div><b>مـدير المـعهد</b><span className="sign-line"></span><small>M. Ya'qub Unang, S.Ag</small></div></div></article></aside>}
  {menu==="master"&&<section className="card module-card"><div className="card-head"><div><h3>Master Data</h3><p>Ringkasan struktur master. Detail akan dibatasi sesuai peran pengguna setelah Apps Script aktif.</p></div></div><div className="stats compact-stats">{[["617","Master Siswa","Data siswa aktif","green"],["124","Master Guru","Data guru aktif","gold"],["63","Master Mapel","Kode mata pelajaran","blue"],["9","Master Kelas","Kelompok kelas","purple"]].map(x=><div className="stat" key={x[1]}><i className={x[3]}>{x[0]==="9"?"◆":"●"}</i><div><span>{x[1]}</span><b>{x[0]}</b><small>{x[2]}</small></div></div>)}</div></section>}
  {menu==="setting"&&<section className="card module-card"><div className="card-head"><div><h3>Pengaturan</h3><p>Konfigurasi sistem akan dikelola setelah backend Apps Script dihubungkan.</p></div></div><div className="settings-grid"><div className="safe"><b>● Mode aman</b><span>Nilai tidak disimpan di Local Storage.</span></div><div className="safe"><b>● Sumber data</b><span>Google Spreadsheet melalui Apps Script.</span></div><div className="safe"><b>● Akses</b><span>Guru, Wali Kelas, dan Admin akan dibatasi berdasarkan peran.</span></div></div></section>}</section></div></main>;
