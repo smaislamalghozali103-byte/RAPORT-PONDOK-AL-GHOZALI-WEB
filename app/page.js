@@ -101,7 +101,10 @@ export default function Home(){
  const effectiveStudents=studentsData;
  const effectiveAssignments=assignments||[];
  const units=[...new Set([...effectiveStudents.map(s=>s.unit),...classesData.map(k=>k.unit)].filter(Boolean))];
- const classes=[...new Set([...classesData.map(k=>k.kelas),...effectiveStudents.map(s=>s.kelas)].filter(Boolean))];
+ const classes=[...new Set([
+   ...classesData.filter(k=>!unit||k.unit===unit).map(k=>k.kelas),
+   ...effectiveStudents.filter(s=>!unit||s.unit===unit).map(s=>s.kelas)
+ ].filter(Boolean))];
  const subjectCatalog=useMemo(()=>{
    const byKey=new Map();
    const masterById=new Map(subjectsData.filter(s=>s.mapelId).map(s=>[String(s.mapelId),s]));
@@ -122,19 +125,51 @@ export default function Home(){
    });
    return [...byKey.values()];
  },[effectiveAssignments,subjectsData]);
- const availableSubjects=useMemo(()=>[...new Set(subjectCatalog.filter(x=>!x.unit||!unit||x.unit===unit).map(x=>x.displayName).filter(Boolean))],[subjectCatalog,unit]);
+ const availableSubjects=useMemo(()=>{
+   if(!unit) return [];
+   const assigned=subjectCatalog.filter(x=>x.unit===unit);
+   const source=assigned.length
+     ? assigned
+     : subjectCatalog.filter(x=>x.unit===unit);
+   return [...new Set(source.map(x=>x.displayName).filter(Boolean))];
+ },[subjectCatalog,unit]);
+
+ useEffect(()=>{
+   if(unit && !classes.includes(klass)) setKlass(classes[0]||"");
+ },[unit,classes.join("|")]);
+
+ useEffect(()=>{
+   if(unit && subject && !availableSubjects.includes(subject)) setSubject("");
+ },[unit,subject,availableSubjects.join("|")]);
  const studentsForClass=effectiveStudents.filter(s=>(s.unit||s.UNIT||"")===unit && (s.kelas||s.KELAS||"")===klass);
  const selectedAssignment=useMemo(()=>{
-   return subjectCatalog.find(a=>{
-     const au=a.unit||a.UNIT||"";
-     const ac=a.kelas||a.KELAS||"";
-     const an=a.displayName||a.namaMapelSumber||a.mataPelajaran||"";
-     return (!au||au===unit) && (!ac||ac===klass) && an===subject;
-   }) || subjectCatalog.find(a=>
-     (a.displayName||a.namaMapelSumber||"")===subject &&
-     (!a.unit||a.unit===unit)
+   if(!unit || !subject) return null;
+
+   // PRIORITAS 1: penugasan guru pada jenjang + kelas yang sedang dipilih.
+   const exact=effectiveAssignments.find(a=>{
+     const au=a.unit||"";
+     const ac=a.kelas||"";
+     const an=a.namaMapelSumber||a.mataPelajaran||a.displayName||"";
+     return au===unit && ac===klass && an===subject;
+   });
+   if(exact){
+     const master=subjectsData.find(s=>
+       (exact.mapelId && String(s.mapelId)===String(exact.mapelId)) ||
+       (exact.kodeMapel && String(s.kodeMapel)===String(exact.kodeMapel))
+     );
+     return {
+       ...exact,
+       namaMapelRaport:exact.namaMapelRaport||master?.namaMapelRaport||master?.namaMapel||subject,
+       namaArabRaport:exact.namaArabRaport||master?.namaArabRaport||master?.namaArab||""
+     };
+   }
+
+   // PRIORITAS 2: master mapel pada jenjang yang sama.
+   return subjectCatalog.find(a=>
+     a.unit===unit &&
+     (a.displayName||a.namaMapelSumber||"")===subject
    ) || null;
- },[subjectCatalog,unit,klass,subject]);
+ },[effectiveAssignments,subjectsData,subjectCatalog,unit,klass,subject]);
  const mapelId=selectedAssignment?.mapelId||"";
  const kodeMapel=selectedAssignment?.kodeMapel||"";
  const reportMapelName=selectedAssignment?.namaMapelRaport||selectedAssignment?.displayName||subject||"";
@@ -303,7 +338,7 @@ export default function Home(){
  {menu==="input"&&<>
  <div className="module-card">
   <div className="module-title"><div><span className="module-kicker">INPUT NILAI</span><h3>Pilih konteks penilaian</h3><p>Filter tampil di dalam panel ini dan tidak memenuhi halaman ketika fungsi lain dipilih.</p></div></div>
-  <div className="filter-grid"><label>Tahun Ajaran<select><option>2026/2027 — Ganjil</option></select></label><label>Jenjang<select value={unit} onChange={e=>setUnit(e.target.value)}>{units.map(x=><option key={x}>{x}</option>)}</select></label><label>Kelas<select value={klass} onChange={e=>setKlass(e.target.value)}>{classes.map(x=><option key={x}>{x}</option>)}</select></label><label>Mata Pelajaran<select value={subject} onChange={e=>setSubject(e.target.value)}>{availableSubjects.map(x=>{const meta=subjectCatalog.find(s=>s.displayName===x);return <option key={meta?.mapelId||meta?.kodeMapel||x} value={x}>{x}</option>})}</select></label></div>
+  <div className="filter-grid"><label>Tahun Ajaran<select><option>2026/2027 — Ganjil</option></select></label><label>Jenjang<select value={unit} onChange={e=>{setUnit(e.target.value);setKlass("");setSubject("");}}><option value="">Pilih Jenjang</option>{units.map(x=><option key={x} value={x}>{x}</option>)}</select></label><label>Kelas<select value={klass} onChange={e=>{setKlass(e.target.value);setSubject("");}} disabled={!unit}><option value="">Pilih Kelas</option>{classes.map(x=><option key={x} value={x}>{x}</option>)}</select></label><label>Mata Pelajaran<select value={subject} onChange={e=>setSubject(e.target.value)} disabled={!unit||!klass}><option value="">Pilih Mata Pelajaran</option>{availableSubjects.map(x=>{const meta=subjectCatalog.find(s=>s.unit===unit&&s.displayName===x);return <option key={meta?.mapelId||meta?.kodeMapel||x} value={x}>{x}</option>})}</select></label></div>
  </div>
  <section className="card module-card"><div className="card-head"><div><h3>Input Nilai</h3><p>Input: {subject||"—"} • Rekap/Raport: {reportMapelName||"—"} • {klass} • {unit}</p></div><span className="pill">{saving?"Menyimpan...":saved?"Tersimpan":"Belum disimpan"}</span></div><div className="table-scroll"><table><thead><tr><th>No</th><th>NISN</th><th>Nama Siswa</th><th>Kelas</th><th>Nilai</th><th>Predikat</th></tr></thead><tbody>{studentsForClass.slice(0,200).map((s,i)=>{const r=normalizeGradeRow(s,i);const v=grades[r.name]??r.value??"";return <tr className={i===student?"selected":""} key={r.studentId||r.nisn||i}><td>{i+1}</td><td>{r.nisn}</td><td><button className="student" onClick={()=>setStudent(i)}>{r.name}</button></td><td>{r.cls}</td><td><input value={v} inputMode="numeric" maxLength={3} placeholder="-" onChange={e=>setGrade(r.name,e.target.value)}/></td><td><em className={"badge "+pred(v).toLowerCase()}>{pred(v)}</em></td></tr>})}</tbody></table></div><div className="foot">Menampilkan {studentsForClass.length||0} siswa • Master Siswa/Mapel/Kelas/Penugasan dari Apps Script {gradeError&&<span className="error">{gradeError}</span>} {apiError&&<span className="error">{apiError}</span>} </div></section>
  </>}
