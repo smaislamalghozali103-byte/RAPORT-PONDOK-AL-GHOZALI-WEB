@@ -664,3 +664,113 @@
 @media(max-width:560px){
   .compact-stats{grid-template-columns:1fr}
 }
+
+
+/* ===== LOGIN CENTERED RAPORT INTEGRASI ===== */
+.login-page{
+  min-height:100vh;
+  padding:28px;
+  background:
+    radial-gradient(circle at 50% 8%,rgba(214,170,58,.10),transparent 24%),
+    linear-gradient(135deg,#f7fbf8 0%,#edf6f0 48%,#f9fbf8 100%);
+}
+.login-card{
+  width:min(1080px,100%);
+  min-height:620px;
+  grid-template-columns:1.08fr .92fr;
+  border:1px solid #d8e5dc;
+  border-radius:24px;
+  background:rgba(255,255,255,.97);
+  box-shadow:0 28px 70px rgba(4,72,45,.12);
+}
+.login-brand{
+  padding:48px 54px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  background:
+    radial-gradient(circle at 50% 22%,rgba(215,163,42,.10),transparent 25%),
+    linear-gradient(145deg,#fbfefc,#edf7f1);
+}
+.login-brand img{
+  width:132px;
+  height:132px;
+  object-fit:contain;
+  margin:0 auto 18px;
+}
+.login-brand .eyebrow{
+  color:#08724a;
+  font-size:9px;
+  letter-spacing:.22em;
+  margin-bottom:8px;
+}
+.login-brand h1{
+  margin:0;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:34px;
+  line-height:1.05;
+  letter-spacing:.03em;
+  color:#183127;
+}
+.login-brand h1 b{color:#08764d}
+.login-brand h2{
+  margin:8px 0 22px;
+  font-family:Georgia,"Times New Roman",serif;
+  color:#1d4737;
+  font-size:15px;
+  letter-spacing:.12em;
+  line-height:1.35;
+}
+.login-guide{
+  width:min(470px,100%);
+  padding:17px 20px;
+  border:1px solid #dce8df;
+  border-radius:14px;
+  background:rgba(255,255,255,.78);
+  text-align:left;
+}
+.login-guide strong{
+  display:block;
+  text-align:center;
+  color:#08724a;
+  font-size:10px;
+  letter-spacing:.15em;
+  margin-bottom:10px;
+}
+.login-guide p{
+  margin:6px 0;
+  color:#6d7973;
+  font-size:9px;
+  line-height:1.55;
+}
+.login-guide p b{color:#244b3a}
+.login-form{
+  padding:52px 58px;
+  border-left:1px solid #e1e9e4;
+  background:#fff;
+}
+.login-form h2{
+  color:#19342a;
+  font-size:25px;
+}
+.login-form input{
+  padding:14px;
+  border-radius:10px;
+}
+.login-form .primary{
+  margin-top:3px;
+  background:linear-gradient(135deg,#056b43,#075a3b);
+}
+.login-help{
+  color:#87938d;
+  text-align:center;
+  font-size:8px;
+  margin-top:12px;
+}
+@media(max-width:820px){
+  .login-card{grid-template-columns:1fr;max-width:540px}
+  .login-form{border-left:0;border-top:1px solid #e1e9e4}
+  .login-brand{padding:38px 30px}
+}
