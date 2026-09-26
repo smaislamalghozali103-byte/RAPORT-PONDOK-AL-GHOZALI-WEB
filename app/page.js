@@ -32,7 +32,6 @@ export default function Home(){
  if(!login)return <main className="login-page"><div className="orb a"/><div className="orb b"/><section className="login-card">
    <div className="login-brand">
    <img src={LOGO} alt="Logo Pondok Modern Al-Ghozali"/>
-   <span className="eyebrow">SISTEM INFORMASI RAPORT</span>
    <h1>RAPORT <b>INTEGRASI</b></h1>
    <h2>PONDOK MODERN AL-GHOZALI</h2>
    <div className="login-guide">
