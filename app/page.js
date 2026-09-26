@@ -33,8 +33,8 @@ function normalizeStudent(s){
   return {studentId:pick(s,"studentId","STUDENT_ID","id","ID"),nisn:pick(s,"nisn","NISN"),namaSiswa:pick(s,"namaSiswa","NAMA_SISWA","nama","NAMA"),unit:pick(s,"unit","UNIT"),kelas:pick(s,"kelas","KELAS","namaKelas","NAMA_KELAS")}
 }
 function normalizeAssignment(a){
-  if(Array.isArray(a)) return {unit:a[0]||"",kelas:a[1]||"",mataPelajaran:a[2]||"",mapelId:a[3]||"",guruId:a[4]||""}
-  return {unit:pick(a,"unit","UNIT"),kelas:pick(a,"kelas","KELAS","namaKelas","NAMA_KELAS"),mataPelajaran:pick(a,"mataPelajaran","MATA_PELAJARAN","namaMapel","NAMA_MAPEL","namaMapelRaport","NAMA_MAPEL_RAPORT"),mapelId:pick(a,"mapelId","MAPEL_ID","idMapel","ID_MAPEL"),guruId:pick(a,"guruId","ID_GURU","idGuru")}
+  if(Array.isArray(a)) return {unit:a[0]||"",kelas:a[1]||"",mataPelajaran:a[2]||"",mapelId:a[3]||"",guruId:a[4]||"",kodeMapel:a[5]||""}
+  return {unit:pick(a,"unit","UNIT"),kelas:pick(a,"kelas","KELAS","namaKelas","NAMA_KELAS"),mataPelajaran:pick(a,"mataPelajaran","MATA_PELAJARAN","namaMapel","NAMA_MAPEL","namaMapelRaport","NAMA_MAPEL_RAPORT"),mapelId:pick(a,"mapelId","MAPEL_ID","idMapel","ID_MAPEL"),guruId:pick(a,"guruId","ID_GURU","idGuru"),kodeMapel:pick(a,"kodeMapel","KODE_MAPEL","kode","KODE","Kode Mapel")}
 }
 function normalizeSubject(s){
   if(Array.isArray(s)) return {mapelId:s[0]||"",namaMapel:s[1]||"",namaArab:s[2]||"",unit:s[3]||""}
@@ -86,6 +86,7 @@ export default function Home(){
    return au===unit && ac===klass && an===subject;
  });
  const mapelId=selectedAssignment?.mapelId||selectedAssignment?.MAPEL_ID||selectedAssignment?.idMapel||selectedAssignment?.ID_MAPEL||"";
+ const kodeMapel=selectedAssignment?.kodeMapel||selectedAssignment?.KODE_MAPEL||selectedAssignment?.kode||selectedAssignment?.KODE||selectedAssignment?.["Kode Mapel"]||"";
  const selectedStudents=studentsForClass;
 
  const current=selectedStudents[student]||null;
@@ -197,13 +198,34 @@ export default function Home(){
        const nisn=s.nisn||s.NISN||s[1]||"";
        const name=s.namaSiswa||s.NAMA_SISWA||s.nama||s[0]||"";
        const nilai=grades[name]===""||grades[name]==null?"":Number(grades[name]);
-       return {studentId,nisn,namaSiswa:name,unit,kelas:klass,mapelId,mataPelajaran:subject,nilai};
+       return {studentId,nisn,namaSiswa:name,unit,kelas:klass,mapelId,kodeMapel,mataPelajaran:subject,nilai};
      }).filter(r=>r.studentId||r.nisn);
      const filled=rows.filter(r=>r.nilai!=="");
      if(!filled.length) throw new Error("Belum ada nilai yang diisi.");
-     const data=await api("saveGrades",{unit,kelas:klass,mataPelajaran:subject,mapelId,grades:JSON.stringify(filled)},session.token);
+     const data=await api("saveGrades",{unit,kelas:klass,mataPelajaran:subject,mapelId,kodeMapel,grades:JSON.stringify(filled)},session.token);
+     // Jangan menganggap tersimpan hanya karena request berhasil.
+     // Baca kembali dari server dan verifikasi nilai yang baru dikirim.
+     const verifyParams={unit,kelas:klass,mataPelajaran:subject};
+     if(mapelId) verifyParams.mapelId=mapelId;
+     if(kodeMapel) verifyParams.kodeMapel=kodeMapel;
+     const verified=await api("grades",verifyParams,session.token);
+     const verifyRows=verified.grades||verified.data||[];
+     const mismatches=filled.filter(row=>{
+       const hit=verifyRows.find(v=>{
+         const sid=v.studentId||v.STUDENT_ID||"";
+         const vn=v.nisn||v.NISN||"";
+         return (row.studentId && String(sid)===String(row.studentId)) ||
+                (row.nisn && String(vn)===String(row.nisn));
+       });
+       if(!hit) return true;
+       const serverValue=hit.nilai??hit.NILAI??"";
+       return Number(serverValue)!==Number(row.nilai);
+     });
+     if(mismatches.length){
+       throw new Error("Server belum memverifikasi "+mismatches.length+" nilai. Tidak ada status 'Tersimpan' palsu.");
+     }
      setSaved(true);
-     setGradeRows(data.grades||data.data||filled);
+     setGradeRows(verifyRows.length?verifyRows:(data.grades||data.data||filled));
    }catch(e){setGradeError(e.message||"Gagal menyimpan nilai.");}
    finally{setSaving(false)}
  };
