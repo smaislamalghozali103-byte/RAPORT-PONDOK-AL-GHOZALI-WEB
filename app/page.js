@@ -55,15 +55,43 @@ export default function Home(){
 
  const current=effectiveStudents[student]||students[student]; const nums=useMemo(()=>Object.values(grades).map(Number).filter(Number.isFinite),[grades]); const total=nums.reduce((a,b)=>a+b,0),avg=nums.length?total/nums.length:0;
  useEffect(()=>{const s=getSession();if(!s?.token)return;setSession(s);setLogin(true);setUser(s.username||"");setRole(s.role||"");setProfile(s.user||null);loadData(s.token)},[]);
- const loadData=async(token)=>{setApiError("");try{
-   const [dash,stu,ass]=await Promise.all([api("dashboard",{},token),api("students",{},token),api("assignments",{},token)]);
-   setStudentsData(stu.students||stu.data||[]);
-   setAssignments(ass.assignments||ass.data||[]);
-   const u=dash.user||dash.profile||safelyUser(token);
- }catch(e){setApiError(e.message);if(/SESSION_INVALID|UNAUTHORIZED|AUTH/i.test(e.message)){clearSession();setLogin(false);setSession(null)}}};
- const safelyUser=()=>null;
+ const loadData=async(token)=>{
+   setApiError("");
+   if(!token){setApiError("Token sesi tidak tersedia. Silakan login kembali.");return}
+   try{
+     const me=await api("me",{},token);
+     const meUser=me.user||me.profile||null;
+     if(meUser){
+       setRole(meUser.role||"");
+       setProfile(meUser);
+     }
+   }catch(e){
+     setApiError("Sesi login tidak dapat diverifikasi: "+e.message);
+     if(/SESSION_INVALID|UNAUTHORIZED|AUTH/i.test(e.message)){
+       clearSession();setLogin(false);setSession(null);setRole("");setProfile(null);
+     }
+     return;
+   }
+   try{
+     const stu=await api("students",{},token);
+     setStudentsData(stu.students||stu.data||[]);
+   }catch(e){setApiError("Data siswa belum termuat: "+e.message)}
+   try{
+     const ass=await api("assignments",{},token);
+     setAssignments(ass.assignments||ass.data||[]);
+   }catch(e){setApiError(prev=>prev?prev+" | Penugasan belum termuat: "+e.message:"Penugasan belum termuat: "+e.message)}
+ };
  const submit=async e=>{e.preventDefault();setErr("");if(!user.trim()||!/^\d{6,}$/.test(pin)){setErr("Username wajib diisi dan PIN minimal 6 digit.");return}
-   setLoading(true);try{const data=await api("login",{username:user.trim(),pin});const s={token:data.token,username:data.user?.username||user.trim(),role:data.user?.role||"",user:data.user||null};saveSession(s);setSession(s);setLogin(true);setRole(s.role);setProfile(s.user);setPin("");await loadData(s.token)}catch(e){setErr(e.message)}finally{setLoading(false)}
+   setLoading(true);
+   try{
+     const data=await api("login",{username:user.trim(),pin});
+     const token=data.token||data.sessionToken||data.session_token||data.data?.token||data.session?.token||"";
+     if(!token) throw new Error("Login diterima server, tetapi token sesi tidak dikirim. Periksa endpoint login Apps Script.");
+     const userData=data.user||data.profile||data.data?.user||null;
+     const s={token,username:userData?.username||user.trim(),role:userData?.role||"",user:userData};
+     saveSession(s);setSession(s);setLogin(true);setRole(s.role);setProfile(s.user);setPin("");setErr("");
+     await loadData(token);
+   }catch(e){setErr(e.message)}finally{setLoading(false)}
  };
  const logout=()=>{clearSession();setSession(null);setLogin(false);setRole("");setProfile(null);setStudentsData([]);setAssignments([]);setUser("");setPin("")};
  const setGrade=v=>{if(v===""||(/^\d{0,3}$/.test(v)&&Number(v)<=100)){setGrades(g=>({...g,[subject]:v}));setSaved(false)}};
