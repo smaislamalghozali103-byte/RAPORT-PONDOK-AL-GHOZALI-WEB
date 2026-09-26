@@ -782,3 +782,126 @@
   mix-blend-mode:multiply;
   isolation:isolate;
 }
+
+
+/* ===== RAPORT PRINT MASTER - F4, MARGIN 2 CM ===== */
+.report{
+  width:210mm !important;
+  height:330mm !important;
+  aspect-ratio:auto !important;
+  min-height:330mm !important;
+  max-width:none !important;
+  margin:0 auto !important;
+  padding:20mm !important;
+  border:1.4px solid #d71920 !important;
+  outline:none !important;
+  background-size:100% 100% !important;
+  overflow:hidden;
+}
+.report .rhead{
+  grid-template-columns:45px 1fr 45px;
+  gap:10px;
+  margin:0 0 7mm !important;
+}
+.report .rhead img{
+  width:40px;
+  height:40px;
+}
+.report .rhead h1{
+  font-size:24px !important;
+  line-height:1.1;
+}
+.report .rhead p{
+  font-size:8px !important;
+  line-height:1.35;
+}
+.report .identity{
+  margin:0 0 6mm !important;
+  gap:3mm 12mm;
+  font-size:8.5px !important;
+  line-height:1.25;
+}
+.report .report-table{
+  width:100% !important;
+  margin:0 !important;
+  font-size:9px !important;
+}
+.report .report-table thead th{
+  height:11mm !important;
+  padding:2.5mm 2mm !important;
+  font-size:9px !important;
+  line-height:1.2;
+}
+.report .report-table tbody td{
+  height:7.8mm !important;
+  padding:1.5mm 2mm !important;
+  font-size:9px !important;
+  line-height:1.2;
+}
+.report .report-table th:first-child,
+.report .report-table td:first-child{
+  width:25% !important;
+  font-size:9.5px !important;
+}
+.report .report-table th:nth-child(2),
+.report .report-table td:nth-child(2){
+  width:7% !important;
+  font-size:9px !important;
+}
+.report .report-table th:nth-child(3),
+.report .report-table td:nth-child(3){
+  width:7% !important;
+  font-size:9.5px !important;
+}
+.report .report-table th:nth-child(4),
+.report .report-table td:nth-child(4){
+  width:26% !important;
+  font-size:9px !important;
+}
+.report .report-table th:nth-child(5),
+.report .report-table td:nth-child(5){
+  width:28% !important;
+  font-size:10px !important;
+}
+.report .report-table th:nth-child(6),
+.report .report-table td:nth-child(6){
+  width:7% !important;
+  font-size:10px !important;
+}
+.report .report-table .sum td{
+  height:8mm !important;
+  font-size:9.5px !important;
+}
+.report .date{
+  margin:8mm 0 0 !important;
+  font-size:9px !important;
+  line-height:1.4;
+}
+.report .sign{
+  margin:10mm 0 0 !important;
+  font-size:9px !important;
+}
+.report .sign>div{
+  min-height:34mm !important;
+}
+.report .sign small{
+  font-size:8px !important;
+}
+
+@media print{
+  .report{
+    width:210mm !important;
+    height:330mm !important;
+    min-height:330mm !important;
+    padding:20mm !important;
+    margin:0 !important;
+    aspect-ratio:auto !important;
+  }
+  .report .report-table{
+    width:100% !important;
+  }
+  @page{
+    size:210mm 330mm;
+    margin:0 !important;
+  }
+}
