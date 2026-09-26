@@ -294,7 +294,8 @@ export default function Home(){
      }).filter(r=>r.studentId||r.nisn);
      const filled=rows.filter(r=>r.nilai!=="");
      if(!filled.length) throw new Error("Belum ada nilai yang diisi.");
-     const payload=JSON.stringify(filled);\n     const data=await api("saveGrades",{unit,kelas:klass,mataPelajaran:subject,mapelId,kodeMapel,items:payload,grades:payload,rows:payload,gradeRows:payload,gradesJson:payload,sessionToken:session.token},session.token,"POST");
+     const payload=JSON.stringify(filled);
+     const data=await api("saveGrades",{unit,kelas:klass,mataPelajaran:subject,mapelId,kodeMapel,items:payload,grades:payload,rows:payload,gradeRows:payload,gradesJson:payload,sessionToken:session.token},session.token,"POST");
      // Jangan menganggap tersimpan hanya karena request berhasil.
      // Baca kembali dari server dan verifikasi nilai yang baru dikirim.
      const verifyParams={unit,kelas:klass,mataPelajaran:subject};
