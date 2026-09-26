@@ -234,3 +234,68 @@
   }
   .report-table .arabic-no{font-size:10px}
 }
+
+
+/* ===== REPORT EXACT STRUCTURE V6 ===== */
+.report-table{
+  direction:rtl;
+  width:100%;
+  table-layout:fixed;
+  border-collapse:collapse;
+  font-family:"Noto Naskh Arabic","Amiri","Times New Roman",serif;
+}
+.report-table thead th{
+  height:34px;
+  vertical-align:middle;
+  text-align:center;
+  font-weight:700;
+  padding:5px 4px;
+  border:1px solid #202820;
+  background:#f6efdf;
+}
+.report-table tbody td{
+  height:28px;
+  vertical-align:middle;
+  padding:4px 5px;
+  border:1px solid #202820;
+  color:#111;
+}
+.report-table th:first-child,
+.report-table td:first-child{width:25%;text-align:center}
+.report-table th:nth-child(2),
+.report-table td:nth-child(2){width:7%;text-align:center;font-family:Arial,sans-serif}
+.report-table th:nth-child(3),
+.report-table td:nth-child(3){width:7%;text-align:center;font-family:"Noto Naskh Arabic","Amiri",serif;font-size:10px}
+.report-table th:nth-child(4),
+.report-table td:nth-child(4){width:26%;direction:ltr;text-align:left;font-family:"Times New Roman",Arial,sans-serif;font-size:9px}
+.report-table th:nth-child(5),
+.report-table td:nth-child(5){width:28%;direction:rtl;text-align:right;font-family:"Noto Naskh Arabic","Amiri",serif;font-size:10.5px;line-height:1.3}
+.report-table th:nth-child(6),
+.report-table td:nth-child(6){width:7%;text-align:center;font-family:"Noto Naskh Arabic","Amiri",serif;font-size:11px;font-weight:700}
+.report-table .grade-word{
+  direction:rtl;
+  text-align:left;
+  font-family:"Noto Naskh Arabic","Amiri",serif;
+  font-size:10px;
+}
+.report-table .grade-western{font-family:Arial,sans-serif;text-align:center}
+.report-table .grade-arabic{font-family:"Noto Naskh Arabic","Amiri",serif;text-align:center;font-size:11px}
+.report-table .subject-id{direction:ltr;text-align:left}
+.report-table .subject-ar{direction:rtl;text-align:right}
+.report-table .arabic-no{direction:rtl;text-align:center;font-weight:700}
+.report-table thead th:nth-child(1){direction:rtl}
+.report-table .sum td{
+  height:30px;
+  background:#faf7ef;
+  font-weight:700;
+  text-align:center;
+}
+.report-table .sum td:nth-child(4){direction:ltr;text-align:left;font-family:"Times New Roman",Arial,sans-serif}
+.report-table .sum td:nth-child(5){direction:rtl;text-align:right}
+@media print{
+  .report-table thead th{height:31px;font-size:8.5px}
+  .report-table tbody td{height:27px;padding:3.5px 4px}
+  .report-table th:nth-child(4),.report-table td:nth-child(4){font-size:8.5px}
+  .report-table th:nth-child(5),.report-table td:nth-child(5){font-size:10px}
+  .report-table .arabic-no,.report-table .grade-arabic{font-size:10px}
+}
