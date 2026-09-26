@@ -79,6 +79,27 @@ function normalizeClass(k){
   if(Array.isArray(k)) return {kelas:k[0]||"",unit:k[1]||""}
   return {kelas:pick(k,"kelas","KELAS","namaKelas","NAMA_KELAS","nama"),unit:pick(k,"unit","UNIT")}
 }
+function normalizeCurriculum(c){
+  if(Array.isArray(c)) return {curriculumId:c[0]||"",group:c[1]||"",urut:c[2]||"",mataPelajaran:c[3]||"",namaArab:c[4]||"",mapelId:c[5]||""};
+  return {curriculumId:pick(c,"curriculumId","KURIKULUM_ID","id"),group:pick(c,"kelompokKelasSumber","KELOMPOK_KELAS_SUMBER","group","GROUP"),urut:pick(c,"urut","URUT"),mataPelajaran:pick(c,"mataPelajaran","MATA_PELAJARAN"),namaArab:pick(c,"namaArabRaport","NAMA_ARAB_RAPORT","namaArab","NAMA_ARAB"),mapelId:pick(c,"mapelId","MAPEL_ID")};
+}
+function mukimGroupForClass(value){
+  const x=String(value||"").toUpperCase().replace(/[‐‑–—]/g,"-").replace(/\s+/g,"").replace(/_/g,"").replace(/INTENSIF/g,"INT");
+  if(/^1[ABCDE]$/.test(x)) return "KELAS 1(VII SMP)";
+  if(/^2[ABCDEF]$/.test(x)) return "KELAS 2 (VIII SMP)";
+  if(/^3[ABCDEF]$/.test(x)) return "KELAS 3 (IX SMP)";
+  if(/^4[ABC]$/.test(x)) return "KELAS 4 (10 SMA)";
+  if(/^5[AC]$/.test(x)) return "KELAS 5A+5C IPA (11 SMA)";
+  if(/^5[BD]$/.test(x)) return "KELAS 5B+5D IPS (11 SMA)";
+  if(/^6[AC]$/.test(x)) return "KELAS 6A+6C-IPA (12 SMA)";
+  if(/^6[BD]$/.test(x)) return "KELAS 6B+6D-IPS (12 SMA)";
+  if(x==="1INT") return "KELAS 1INT(10 SMA)";
+  if(x==="2INTA"||x==="2INTIPA") return "KELAS 2INT A-IPA (11 SMA)";
+  if(x==="2INTB"||x==="2INTIPS") return "KELAS 2INT B-IPS (11 SMA)";
+  if(x==="3INTA"||x==="3INTIPA") return "KELAS 3INT A-IPA (12 SMA)";
+  if(x==="3INTB"||x==="3INTIPS") return "KELAS 3INT B-IPS (12 SMA)";
+  return "";
+}
 
 const LOGO="https://raw.githubusercontent.com/smaislamalghozali103-byte/raport_pondok_integrasi/main/public/assets/logo-ypi-al-ghozali.png";
 const subjects=[
