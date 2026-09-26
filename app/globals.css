@@ -525,3 +525,34 @@
   .sign small{font-size:5.8px}
   @page{size:A4 portrait;margin:0}
 }
+
+
+/* ===== REPORT COLUMN ORDER FINAL ===== */
+.report-table{
+  direction:rtl !important;
+}
+.report-table th:nth-child(6),
+.report-table td:nth-child(6),
+.report-table .report-no-head{
+  direction:rtl;
+  text-align:center !important;
+  width:7%;
+  font-family:"Noto Naskh Arabic","Amiri",serif;
+  font-weight:700;
+}
+.report-table th:nth-child(1),
+.report-table td:nth-child(1){width:25%}
+.report-table th:nth-child(2),
+.report-table td:nth-child(2){width:7%}
+.report-table th:nth-child(3),
+.report-table td:nth-child(3){width:7%}
+.report-table th:nth-child(4),
+.report-table td:nth-child(4){width:26%}
+.report-table th:nth-child(5),
+.report-table td:nth-child(5){width:28%}
+
+/* Raport memang tidak memiliki kolom Predikat */
+.report-table .predicate,
+.report-table .predikat,
+.report-table th.predikat,
+.report-table td.predikat{display:none !important}
