@@ -85,6 +85,7 @@ function normalizeCurriculum(c){
 }
 function mukimGroupForClass(value){
   const x=String(value||"").toUpperCase().replace(/[‐‑–—]/g,"-").replace(/\s+/g,"").replace(/_/g,"").replace(/INTENSIF/g,"INT");
+  // TMMIA = seluruh kelas MUKIM: kelas 1–6, baik yang formalnya SMP maupun SMA.
   if(/^1[ABCDE]$/.test(x)) return "KELAS 1(VII SMP)";
   if(/^2[ABCDEF]$/.test(x)) return "KELAS 2 (VIII SMP)";
   if(/^3[ABCDEF]$/.test(x)) return "KELAS 3 (IX SMP)";
