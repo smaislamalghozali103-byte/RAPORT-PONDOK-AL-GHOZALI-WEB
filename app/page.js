@@ -83,6 +83,15 @@ function normalizeCurriculum(c){
   if(Array.isArray(c)) return {curriculumId:c[0]||"",group:c[1]||"",urut:c[2]||"",mataPelajaran:c[3]||"",namaArab:c[4]||"",mapelId:c[5]||""};
   return {curriculumId:pick(c,"curriculumId","KURIKULUM_ID","id"),group:pick(c,"kelompokKelas","KELOMPOK KELAS SUMBER","kelompokKelasSumber","KELOMPOK_KELAS_SUMBER","group","GROUP"),urut:pick(c,"urut","URUT"),mataPelajaran:pick(c,"mataPelajaran","MATA_PELAJARAN"),namaArab:pick(c,"namaArabRaport","NAMA_ARAB_RAPORT","namaArab","NAMA_ARAB"),mapelId:pick(c,"mapelId","MAPEL_ID")};
 }
+function isTmmiaSmaClass(value){
+  const x=String(value||"").toUpperCase().replace(/^KELAS\s*/,"").replace(/INTENSIF/g,"INT").replace(/[^A-Z0-9]/g,"");
+  return /^4[ABC]?$/.test(x) ||
+    /^5[ABCD]?$/.test(x) ||
+    /^6[ABCD]?$/.test(x) ||
+    x==="1INT" ||
+    x==="2INTA" || x==="2INTB" || x==="2INTIPA" || x==="2INTIPS" ||
+    x==="3INTA" || x==="3INTB" || x==="3INTIPA" || x==="3INTIPS";
+}
 function mukimGroupForClass(value){
   const x=String(value||"").toUpperCase().replace(/^KELAS\s*/,"").replace(/INTENSIF/g,"INT").replace(/[^A-Z0-9]/g,"");
   // TMMIA = seluruh kelas MUKIM: kelas 1–6, baik yang formalnya SMP maupun SMA.
@@ -126,7 +135,8 @@ export default function Home(){
  const units=["SMP","SMA","TMMIA"];
  const classes=[...new Set([
    ...(unit==="TMMIA"
-     ? [...classesData.map(k=>k.kelas),...effectiveStudents.map(s=>s.kelas)].filter(k=>mukimGroupForClass(k))
+     ? [...classesData.map(k=>k.kelas),...effectiveStudents.map(s=>s.kelas)]
+         .filter(k=>mukimGroupForClass(k) && isTmmiaSmaClass(k))
      : [...classesData.filter(k=>!unit||k.unit===unit).map(k=>k.kelas),...effectiveStudents.filter(s=>!unit||s.unit===unit).map(s=>s.kelas)])
  ].filter(Boolean))];
  const subjectCatalog=useMemo(()=>{
@@ -152,6 +162,10 @@ export default function Home(){
  const availableSubjects=useMemo(()=>{
    if(!unit) return [];
    if(unit==="TMMIA"){
+     // TMMIA pada aplikasi ini khusus kelompok SMA MUKIM.
+     // Mapel diambil dari KURIKULUM berdasarkan kelompok kelas yang dipilih,
+     // lalu diperkaya MASTER MAPEL. Tidak ada daftar mapel hard-code.
+     if(!isTmmiaSmaClass(klass)) return [];
      const group=mukimGroupForClass(klass);
      if(!group) return [];
      const masterById=new Map(subjectsData.filter(s=>s.mapelId).map(s=>[String(s.mapelId),s]));
@@ -198,7 +212,12 @@ export default function Home(){
  useEffect(()=>{
    if(unit && subject && !availableSubjects.some(x=>String(x.id)===String(subject))) setSubject("");
  },[unit,subject,availableSubjects.join("|")]);
- const studentsForClass=effectiveStudents.filter(s=>{const sKelas=s.kelas||s.KELAS||"";if(sKelas!==klass)return false;if(unit==="TMMIA")return true;return (s.unit||s.UNIT||"")===unit;});
+ const studentsForClass=effectiveStudents.filter(s=>{
+   const sKelas=s.kelas||s.KELAS||"";
+   if(sKelas!==klass)return false;
+   if(unit==="TMMIA") return isTmmiaSmaClass(sKelas) && (!s.unit || String(s.unit).trim().toUpperCase()==="TMMIA");
+   return (s.unit||s.UNIT||"")===unit;
+ });
  const selectedAssignment=useMemo(()=>{
    if(!unit || !subject) return null;
    const selectedId=String(subject);
