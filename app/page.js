@@ -136,7 +136,7 @@ export default function Home(){
  const classes=[...new Set([
    ...(unit==="TMMIA"
      ? [...classesData.map(k=>k.kelas),...effectiveStudents.map(s=>s.kelas)]
-         .filter(k=>mukimGroupForClass(k) && isTmmiaSmaClass(k))
+         .filter(k=>mukimGroupForClass(k))
      : [...classesData.filter(k=>!unit||k.unit===unit).map(k=>k.kelas),...effectiveStudents.filter(s=>!unit||s.unit===unit).map(s=>s.kelas)])
  ].filter(Boolean))];
  const subjectCatalog=useMemo(()=>{
@@ -162,10 +162,9 @@ export default function Home(){
  const availableSubjects=useMemo(()=>{
    if(!unit) return [];
    if(unit==="TMMIA"){
-     // TMMIA pada aplikasi ini khusus kelompok SMA MUKIM.
-     // Mapel diambil dari KURIKULUM berdasarkan kelompok kelas yang dipilih,
+     // TMMIA memuat kelompok SMP dan SMA.
+     // Mapel mengikuti KURIKULUM berdasarkan kelas yang dipilih,
      // lalu diperkaya MASTER MAPEL. Tidak ada daftar mapel hard-code.
-     if(!isTmmiaSmaClass(klass)) return [];
      const group=mukimGroupForClass(klass);
      if(!group) return [];
      const masterById=new Map(subjectsData.filter(s=>s.mapelId).map(s=>[String(s.mapelId),s]));
@@ -215,7 +214,13 @@ export default function Home(){
  const studentsForClass=effectiveStudents.filter(s=>{
    const sKelas=s.kelas||s.KELAS||"";
    if(sKelas!==klass)return false;
-   if(unit==="TMMIA") return isTmmiaSmaClass(sKelas) && (!s.unit || String(s.unit).trim().toUpperCase()==="TMMIA");
+   if(unit==="TMMIA"){
+     // Dropdown TMMIA tetap memuat SMP + SMA.
+     // Jika kelas yang dipilih adalah kelas SMA TMMIA, ambil siswa berdasarkan KELAS
+     // tanpa mensyaratkan kolom UNIT harus bertuliskan TMMIA (master bisa menyimpan unit formal).
+     if(isTmmiaSmaClass(sKelas)) return true;
+     return (!s.unit || String(s.unit).trim().toUpperCase()==="TMMIA");
+   }
    return (s.unit||s.UNIT||"")===unit;
  });
  const selectedAssignment=useMemo(()=>{
